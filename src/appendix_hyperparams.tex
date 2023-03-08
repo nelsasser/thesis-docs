@@ -1,0 +1,108 @@
+\chapter{Model and Optimizer Hyperparameters}\label{ch:model-and-optimizer-hyperparameters}    % *NOT* \OnePageChapter
+
+\section{cINN}\label{sec:cinn}
+
+For all experiments we construct our cINN normalizing flow generator as follows,
+
+\begin{table}[htb]
+    \caption[cINN Hyperparameters]{
+        Fixed hyperparameters of the cINN generator model.
+    }
+    \begin{center}
+        \begin{tabular}{|c|c|} \hline
+        Parameter Name & Value  \\	% footnote symbols!
+        \hline \hline
+        Reference Distribution                           & Standard Multivariate Gaussian    \\ \hline
+        \# Flow Layers                                   & 12                                \\ \hline
+        Flow NN Hidden Layers                            & 1                                 \\ \hline
+        Flow NN Hidden Units                             & 128                               \\ \hline
+        Flow NN Activation                               & ReLU                              \\ \hline
+        Feature Extraction Network                       & Omitted\footnotemark              \\ \hline
+        $p$-Dropout                                      & 0.8                               \\ \hline
+        Spectral Norm Regularization~\cite{spectral_reg} & 0.1                               \\ \hline
+        Weight Initialization                            & Uniform Xavier~\cite{xavier_init} \\ \hline
+        \end{tabular}
+        \\ \rule{0mm}{5mm}
+    \end{center}
+    \label{tab:generator_params}
+\end{table}
+
+Additionally, we used a soft-clamping on the outputs of the $s_1$ and $s_2$ neural networks in each flow layer
+$\tilde{s} = \frac{2\alpha}{\pi} \arctan \left(\frac{s}{\alpha}\right)$ to prevent exploding values from exponentiation.
+We take $\alpha = 1.9$ as recommended~\cite{cinn}.
+
+\footnotetext{We experimented with many settings for a deep feed-forward neural network projecting into both higher and
+lower dimensional latent feature spaces, however, we found that inclusion of the feature extraction neural network
+tended to significantly increase NLL metrics while degrading mCRPS metrics.
+We believe a valuable line of future work to be further investigation of the root cause of the divergence between these
+metrics and methods for reducing the gap.}
+
+\section{GAN Discriminator}\label{sec:gan-discriminator}
+
+For all experiments we construct a feed-forward spectral-normalized~\cite{sngan} GAN discriminator as follows,
+
+\begin{table}[htb]
+    \caption[SN-GAN Discriminator Hyperparameters]{
+        Fixed hyperparameters of the SN-GAN discriminator model.
+    }
+    \begin{center}
+        \begin{tabular}{|c|c|} \hline
+        Parameter Name & Value  \\	% footnote symbols!
+        \hline \hline
+        Activation                   & LeakyReLU$(\alpha=0.2)$ \\ \hline
+        Hidden Layer \%\footnotemark & $\left[0.8, \; 0.4, \; 0.2, \; 0.1\right]$ \\ \hline
+        \end{tabular}
+        \\ \rule{0mm}{5mm}
+    \end{center}
+    \label{tab:discriminator_params}
+\end{table}
+
+\footnotetext{The number of hidden units per layer is calculated as a percentage of the number of input (\# of price
+nodes + \# conditional quantities), i.e. $\texttt{hidden size}_i = \texttt{input size} \times {hidden pct}_i$.}
+
+\section{EPF-DNN}\label{sec:epf-dnn}
+
+We construct a modified version deep neural network presented in the open-access \texttt{epf-toolbox} used in the
+experiments of section~\ref{sec:comparison-against-baselines} as follows,
+
+\begin{table}[htb]
+    \caption[EPF-DNN Hyperparameters]{
+        Fixed hyperparameters of the EPF-DNN model.
+    }
+    \begin{center}
+        \begin{tabular}{|c|c|} \hline
+        Parameter Name & Value  \\	% footnote symbols!
+        \hline \hline
+        \# Hidden Layers             & 1 \\ \hline
+        \# Hidden Units / Layer      & 512 \\ \hline
+        Activation                   & LeakyReLU \\ \hline
+        $p$-Dropout                  & 0.4 \\ \hline
+        Spectral Norm Regularization & 0.01 \\ \hline
+        \end{tabular}
+        \\ \rule{0mm}{5mm}
+    \end{center}
+    \label{tab:epf_dnn_params}
+\end{table}
+
+\section{Adam Optimizer}\label{sec:adam-optimizer}
+
+All deep-learning models are trained using the Adam optimizer with parameters as follows,
+
+\begin{table}[htb]
+    \caption[Adam Hyperparameters]{
+        Fixed hyperparameters of Adam optimizers.
+    }
+    \begin{center}
+        \begin{tabular}{|c|c|} \hline
+        Parameter Name & Value  \\	% footnote symbols!
+        \hline \hline
+        $\beta_1$               & 0.9       \\ \hline
+        $\beta_2$               & 0.98      \\ \hline
+        Learning Rate           & $10^{-3}$ \\ \hline
+        Fine-tune Learning Rate & $10^{-4}$ \\ \hline
+        Batch Size              & 128       \\ \hline
+        \end{tabular}
+        \\ \rule{0mm}{5mm}
+    \end{center}
+    \label{tab:adam_params}
+\end{table}

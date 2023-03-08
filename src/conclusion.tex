@@ -1,0 +1,46 @@
+\chapter{Conclusion}\label{ch:conclusion}
+
+In this work we presented a novel methodology for joint probabilistic day-ahead energy price forecasts over a set of
+geographically distributed price nodes and several practices that can be used to improve forecasting results using
+recent advances in deep generative modeling.
+Our proposed methodology allows for both exact conditional likelihood estimation and efficient conditional sampling for
+forecasting tasks.
+Comparisons of our model to both state-of-the-art open-access benchmarks in energy price forecasting literature and
+commercial physics based optimal powerflow tools provide clear evidence for the superiority of our proposed methodology
+both in terms of forecast accuracy, and more expressive information-rich probabilistic forecasting in comparison to
+traditional point-forecasting methods.
+Despite this, we believe the methodology presented in this work can be further improved with the following
+lines of continued research,
+
+\begin{enumerate}
+    \item \textbf{Model Robustness and Interpretability}: A key issue we faced during development of these methods was
+          the use of non-standard robust metrics when tracking model fit due to the instabilities we observed for mean
+          NLL calculations, caused by sporadic and extremely low log-likelihood evaluations.
+          While we were able to find workarounds, they do not address the root causes of these instabilities.
+          We believe the application of modern robust deep learning methods to be a worthwhile investigation to determine
+          if more stable results can be achieved by improving model robustness.
+          Additionally, such techniques could be used to provide interpretability as to the quantities and market
+          conditions to which our model is most sensitive.
+          Such transparency is desirable for the utilization of these models when executing positions in the markets
+          based on information provided by these forecasts.
+    \item \textbf{Hierarchical Modeling and Uncertainty Propagation}: A key assumption of our methods is that the
+          quantities we condition our forecasts on have no uncertainty, however, load, generation, and meteorological
+          forecasts are known to be uncertain and error-prone.
+          While more accurate forecasts would likely improve results, no forecast is 100\% correct, 100\% confident, 100\%
+          of the time.
+          Instead, capturing the uncertainty of those upstream fundamental forecasts in their own density estimate
+          $p(c_t)$ and constructing a hierarchical density estimate $p(x_t|c_t)p(c_t)$ may better capture the
+          relationship between our fundamental forecasts and resulting price forecasts as we could propagate the
+          uncertainty in our fundamental forecasts into the uncertainty of our price forecasts.
+    \item \textbf{Generalization to Other Markets and a Greater Number of Price Nodes}: Our experiments in this work
+          were limited to the study of a single set of 45 price nodes in the PJM market.
+          There are a total of 8 day-ahead energy markets in North America, with many more in Europe and the rest of the
+          world.
+          These markets each can have significant differences between one another in terms of regulation, available
+          generation, load profiles, weather patterns, etc. that all have outstanding affect on day-ahead price actions.
+          Additionally, we only looked a small set of 45 price nodes despite markets often being comprised of hundreds
+          if not thousands of distinct price nodes.
+          We believe further research into the generalizablility of our proposed methods into other markets and the
+          issues faced when scaling up forecasts to larger sets of price nodes to be of great practical importance to
+          the deployment and execution of this methodology.
+\end{enumerate}
