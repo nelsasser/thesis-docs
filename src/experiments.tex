@@ -28,13 +28,13 @@ Figure~\ref{fig:weekly_windgen}.
 
 \begin{figure}[htbp]
     \caption[Relationship between quarterly aggregated day-ahead prices and natural gas prices]{
-        The relationship between day-ahead energy prices and natural gas prices.
-        The colorful histograms show the distribution of Chicago Hub DA prices aggregated
+        Relationship between day-ahead LMPs and natural gas prices.
+        The left-y-axis and histograms show the distribution of Chicago Hub DA-LMPs aggregated
         on a quarterly basis.
-        The black dots-and-flyers and right-y-axis show the quaterly aggregate spot natural gas prices at TETCO-M3
+        The right-y-axis and black dots-and-flyers show quaterly aggregate natural gas prices at TETCO-M3
         where the dots represent the mean price and the upper, lower flyers represent the $75^{\text{th}}$ and
         $25^{\text{th}}$ percentiles respectively.
-        We see a clear direct relationship between the mean and tails of the gas price distributions and the shape
+        Observe the relationship between the mean and tails of the gas price distributions and the shape
         of the DA price distributions over time.
     }
     \begin{center}
@@ -48,11 +48,10 @@ Figure~\ref{fig:weekly_windgen}.
 \end{figure}
 
 \begin{figure}[htbp]
-    \caption[Plot of the relationship between total aggregate load and day-ahead prices]{
-        The relationship between day-ahead energy prices and seasonal load patters.
+    \caption[Total aggregate load v.s. day-ahead prices]{
+        The relationship between day-ahead LMPs and seasonal load patters.
         The left-y-axis and blue curve shows mean total load forecast in PJM aggregated on a weekly basis.
-        We compare against the mean DA prices at the Chicago Hub shown in orange on the right-y-axis and observe
-        a direct relationship between the quantities.
+        The right-y-axis and orange curve show the weekly aggregate mean Chicago Hub DA-LMP.
     }
     \begin{center}
         \setlength{\fboxsep}{0pt}%
@@ -65,10 +64,10 @@ Figure~\ref{fig:weekly_windgen}.
 \end{figure}
 
 \begin{figure}[htbp]
-    \caption[Plot of the relationship between total aggregate wind generation and day-ahead prices]{
-        The relationship between day-ahead energy prices and seasonal wind generation patters.
+    \caption[Total aggregate wind generation v.s. day-ahead prices]{
+        The relationship between day-ahead LMPs and seasonal wind generation patters.
         The left-y-axis and blue curve shows mean total wind generation forecast in PJM aggregated on a weekly basis.
-        We compare against the mean DA prices at the Chicago Hub shown in orange on the right-y-axis.
+        The right-y-axis and orange curve show the weekly aggregate mean Chicago Hub DA-LMP.
     }
     \begin{center}
         \setlength{\fboxsep}{0pt}%
@@ -268,14 +267,14 @@ It is clear how these samples would severely degrade the CRPS metrics of this fo
 \begin{figure}[htbp]
     \caption[Forecast joint distribution with extreme outliers]{
         A marginalized joint distribution forecast between WESTERN HUB and AEP GEN HUB price nodes.
-        Note the three extreme outliers with values on the order of magnitude of \$$10^7$ which exceed both
+        Note the outliers with values on the order of magnitude of \$$10^7$ which exceed both
         reasonable price expectations and hard price limits enforced by PJM.
     }
     \begin{center}
         \setlength{\fboxsep}{0pt}%
         \setlength{\fboxrule}{1pt}%
 %        \fbox{
-        \includegraphics[width=120mm]{figs/bad_samples}
+        \includegraphics[width=100mm]{figs/bad_samples}
 %        }
     \end{center}
     \label{fig:badsamples}
@@ -365,19 +364,18 @@ regularization} due to the properties observed.
 
 \begin{figure}[htbp]
     \caption[Illustration of domain warping for synthetic 2-d distribution]{
-        The warping of the reference domain under the push-forward opertion of a trained normalizing flow model.
-        The left-most panel depicts reference samples shown in blue and concentric circles in the reference domain
+        The warping of the reference domain under the push-forward opertion of a trained normalizing flow model with
+        with three affine-coupling layers.
+        \textbf{Left:} Reference samples shown in blue and concentric circles in the reference domain
         drawn in black.
-        The right-most panel depicts the samples pushed-forward into the target space and the same concentric circles
+        \textbf{Right:} Samples pushed-forward into the target space and the same concentric circles
         warped in the target domain.
-        Intermediate panels show the samples and domain-circles after the application of intermediate flow layers.
-        Note the strange, excessive warping of the reference domain near the tails of the target distribution.
     }
     \begin{center}
         \setlength{\fboxsep}{0pt}%
         \setlength{\fboxrule}{1pt}%
 %        \fbox{
-        \includegraphics[width=120mm]{figs/nf_circs}
+        \includegraphics[width=120mm]{figs/nf_circs_cropped}
 %        }
     \end{center}
     \label{fig:flow_circs}
@@ -459,12 +457,12 @@ Also note that beyond the mean forecast and 95\% confidence intervals, each fore
 function as shown in Figure~\ref{fig:univar_dens}.
 
 \begin{figure}[htbp]
-    \caption[Timeseries of forecast v.s. observed prices]{
-        Forecasts for our proposed probabilistic forecasting methodology and EPF-LEAR, EPF-DNN, and OPF baselines
-        against the true DA prices are shown at the NEW JERSEY HUB price node over two distinct 5 day intervals in 2021.
-        The left panel shows forecasts and true prices over 5 days during an extreme winter weather event in Texas
+    \caption[Timeseries of observed v.s. forecast prices]{
+        Forecasts from the proposed probabilistic forecasting methodology, EPF-LEAR, EPF-DNN, and OPF baselines
+        against the true NEW JERSEY HUB DA LMPs over two five-day intervals in 2021.
+        (a) forecasted and observed LMPs over five-days during an extreme winter weather event in Texas
         that caused unprecendented price action in PJM.
-        The right panel shows forecasts and true prices over a typical 5-day interval in the summer.
+        (b) forecasted and observed LMPs over a typical five-day interval in the summer.
         Note the differences in uncertainty and intra-day price action captured by the probabilistic forecasts
         during the different market conditions.
     }
@@ -479,7 +477,7 @@ function as shown in Figure~\ref{fig:univar_dens}.
 \end{figure}
 
 \begin{figure}[htbp]
-    \caption[Comparison of forecasts at select hours]{
+    \caption[Comparison of forecasts at select market-hours]{
         Forecasts for our proposed probabilistic forecasting methodology and EPF-LEAR, EPF-DNN, and OPF baselines
         against the true DA prices are shown at the NEW JERSEY HUB price node over four hours in a single market day.
     }
