@@ -9,12 +9,12 @@ to accurately forecast electricity prices in order to make informed investment a
 To address this challenge, the application of machine learning, and in particular deep generative models, to
 day-ahead electricity price forecasting has become a topic of significant interest.
 
-The North American electrical grid, sometimes regarded as the ``world's largest machine'', is a feat of modern
+The North American electrical grid, sometimes regarded as the ``world's largest machine,'' is a feat of modern
 engineering and operations that provides a critical resource for over 400 million of individuals.
-While the planning, construction, and maintenance of the physical infrastructure a clearly non-trivial tasks,
+While the planning, construction, and maintenance of the physical infrastructure are clearly non-trivial tasks,
 post-completion the continuous and efficient operation of grid resources poses perhaps an even greater challenge.
-In order to keep generation and demand need to be synchronized, a grid operator must dispatch the least-cost optimal
-generators at the perfect time.
+To keep generation and demand synchronized, a grid operator must dispatch the least-cost optimal
+generators such that all electrical loads \textit{exactly} satisfied.
 Furthermore, the matching must be done continuously despite uncertainty in the load, weather, generation,
 grid topology, fuel prices, etc., lest there be a catastrophic failure in overall grid operations~\cite{ercotfail}.
 
@@ -22,7 +22,7 @@ The early grid worked with local, vertically integrated utilities that owned all
 an area.
 Due to the small scale of the grids and relative certainty in the generation mix, real time dispatch remained simple
 enough such that it could be done manually.
-Growth in the size and interconnection of the grid network has exacerbated the nonlinear and often extreme interactions
+Growth in the size and interconnection of the grid network has exacerbated the nonlinear and unpredictable interactions
 between components in an alternating-current (AC) network~\cite{grid_sensitivity}.
 More recently, increased penetration of renewable energy sources, such as solar and wind generation, coupled
 with a lack of suitable storage options has dramatically increased overall uncertainty in grid operations.
@@ -46,9 +46,9 @@ grid, often referred to as \textit{price nodes}.
 The LMP can be decomposed into the \textit{energy price}, \textit{congestion price}, and \textit{loss price} which are
 the costs of producing the energy (equal at all nodes), the costs of safely transmitting energy across the grid,
 and the energy loss due to physical transmission inefficiencies.
-Figure~\ref{fig:contours} captures a subset of LMPs in the Pennsylvania-New Jersey-Maryland (PJM) ISO at various times
+Figure~\ref{fig:contours} captures a subset of LMPs in the Pennsylvania-New Jersey-Maryland (PJM) ISO over the duration
 of a typical market day.
-Observe the near constant LMPs in the early morning hour of the market (top-left) and the significant differences
+Observe the uniform LMPs in the early morning hour of the market (top-left) and the significant differences
 between nearby prices nodes in the afternoon hours (bottom-left) indicating low-congestion and high-congestion
 regimes respectively.
 
@@ -69,17 +69,54 @@ regimes respectively.
     \label{fig:contours}
 \end{figure}
 
-\section{The Application of Machine Learning to Price Forecasting}\label{sec:the-application-of-machine-learning-to-price-forecasting}
+\section{The Application of Machine Learning to Energy Price Forecasting}\label{sec:the-application-of-machine-learning-to-price-forecasting}
 
 The complicated task of forecasting nodal LMPs play a crucial role in the functioning of DA markets.
 Accurate forecasts allow market participants to make informed trading decisions, plan generation and demand schedules,
 and manage risk exposure.
-Thus poor forecasts can result in reduced market efficiency, realized by wasted generation
-resources and high prices.
+Thus, poor forecasts can result in reduced market efficiency, realized as wasted generation resources, high energy
+prices, and greater carbon emissions~\cite{Surana2019}.
 Factors such as volatile renewable generation, weather patterns, fuel prices, demand uncertainty, and complex
 interactions between grid components make it a formidable challenge.
 However, recent developments in machine learning, in particular deep learning methods, and access to historical market
 data show promise at capturing the complex and dynamic structures essential for accurate forecasts.
+
+\section{Motivation and Contribution}\label{sec:motivation}
+
+We motivate the development of probabilistic forecasting methods by first discussing the limitations of common
+point or interval forecasts.
+Point forecasts, despite common usage, provide the least amount of information for decision makers to act upon, as
+all uncertainty is discarded to obtain a single value.
+In comparison, interval forecasts, when paired with point forecasts, are substantially more informative.
+The uncertainty surrounding a point forecast can often be captured as a confidence interval (CI), i.e. a range of
+estimates which likely contain the ``true'' for some confidence level.
+The size of an interval can give decision makers insight to the uncertainty of the forecast as ``wider'' CIs indicate
+more uncertain forecasts.
+The relationship between a point forecast and interval forecast can also provide insight to the uncertainty structure.
+Point forecasts near the bounds of an interval forecast may indicate certain skewness and tail behavior of the true
+underlying uncertainty.
+However, interval forecasts still discard valuable structural information such as multi-modality and tail behavior
+outside the interval range.
+
+Capturing all complexities and nuances of forecast uncertainty can only be achieved with probability density forecasts,
+whereby a probability density function is defined over the entire forecast domain.
+Despite plenty of methods existing for low-dimensional problems, efficiently modeling joint conditional
+distributions in high dimensions has long been extremely difficult.
+Recent advances in deep neural network based generative models, in particular \textit{normalizing flows}, show promise
+for characterizing high dimensional and complex joint conditional probability densities.
+Furthermore, normalizing flows enable both exact likelihood evaluation and efficient sampling which allow powerful
+Monte Carlo estimation of key quantities of interest needed to make informed financial decisions in energy markets.
+
+The rest of this work is structured as follows.
+In Chapter~\ref{ch:background} we outline the key mathematical background required to formulate probabilistic forecasts
+using recent advances in deep generative modeling.
+In Chapter~\ref{ch:methodology} we define our proposed methodology for characterizing probability density estimators
+and generating probabilistic forecasts.
+In Chapter~\ref{ch:experiments} we investigate techniques to improve forecasting skill in day-ahead energy markets and
+compare our proposed methods against open-benchmarks in energy price forecasting literature and commercial price
+forecasting tools.
+Finally, in Chapter~\ref{ch:conclusion} we summarize our key findings and lay out key future research paths to improve
+model results, robustness, interpretability, and generalizability.
 
 \section{Related Work}\label{sec:related-work}
 
@@ -131,40 +168,3 @@ convolutional neural network to learn the spatio-temporal interactions from the 
 %the single point forecasts with the model.
 Cramer et al.~\cite{48550} develop a normalizing flows model capture the joint probability distribution of multi-hour price
 action on a single node and generate probabilistic forecasts for intra-day nodal prices in the German EPEX spot market.
-
-\section{Motivation}\label{sec:motivation}
-
-We motivate the formulation of probabilistic forecasts by first illustrating the drawbacks to both point and interval
-forecasts.
-Consider a participant who obtains point forecasts.
-It is not surprising if they begin to ask questions not only on the accuracy of the forecast but also on what is not
-included in the forecast, ``What is the probability the true price will be above/below my forecast?
-How likely is my forecast to be \$10 under/over the true price?
-What about \$100 over/under?''
-The implied financial risk of accepting a point forecast at face value an be astronomical, but without an accurate and
-informative measure of uncertainty the options to determine that risk are limited and rely on further assumptions which
-likely do not hold in reality.
-
-While interval forecasts offer some benefit over point forecasts, they continue to discard information that
-that could be useful for decision-making.
-For instance, while a 95\% confidence interval forecast surrounding a point forecast provides greater insight on the
-likelihood of facing financial ruin than a point forecast, information on the distribution inside the confidence
-interval such as skewness, multi-modality, or tail behavior is still unknown.
-
-Such needs simply cannot be fulfilled by point and interval forecasts despite the accuracy and sophisticated means of
-obtaining the forecasts.
-However, recent advances in deep neural network based generative models, in particular \textit{normalizing flows}, allow
-for both estimating the likelihood of events and efficient sampling of high-dimensional conditional probability densities,
-enabling simple yet flexible powerful Monte Carlo estimation of key quantities of interest needed to make informed
-financial decisions in energy markets.
-
-The rest of this work is structured as follows.
-In Chapter~\ref{ch:background} we outline the key mathematical background required to formulate probabilistic forecasts
-using recent advances in deep generative modeling.
-In Chapter~\ref{ch:methodology} we define our proposed methodology for characterizing probability density estimators
-and generating probabilistic forecasts.
-In Chapter~\ref{ch:experiments} we investigate techniques to improve forecasting skill in day-ahead energy markets and
-compare our proposed methods against open-benchmarks in energy price forecasting literature and commercial price
-forecasting tools.
-Finally, in Chapter~\ref{ch:conclusion} we summarize our key findings and lay out key future research paths to improve
-model results, robustness, interpretability, and generalizability.
