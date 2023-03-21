@@ -7,7 +7,8 @@ Let $\pi: \mathbb{R}^n \mapsto \mathbb{R}^+$ refer to the \textit{target density
 and $\eta: \mathbb{R}^n \mapsto \mathbb{R}^+$ refer to a known \textit{reference density} with which we can evaluate
 likelihoods and draw samples from.
 If $\pi$ and $\eta$ both are smooth and continuous over $\mathbb{R}^n$ then there is a smooth bijection (diffeomorphism)
-$T: \mathbb{R}^n \mapsto \mathbb{R}^n$ such that the following change of variables relationship holds,
+$T: \mathbb{R}^n \mapsto \mathbb{R}^n$, referred to as a \texit{transport map}, such that the following change of variables
+relationship holds,
 
 \begin{equation*}
     \pi(x) = \eta\left( z=T^{-1}(x) \right) \left| \det J_T(x) \right|^{-1},
