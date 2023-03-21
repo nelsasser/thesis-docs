@@ -238,23 +238,23 @@ For an observation at $y=0$, the CRPS estimators are computed to be $\widehat{CR
 and $\widehat{CRPS}_{\hat{F}'_\mathcal{U}}(0) = 0.3748$ respectively.
 Clearly, extreme outliers have a detrimental effect on estimated CRPS metrics.
 
-\begin{figure}[htbp]
-    \caption[Example CRPS calculation of a standard Gumbel distribution]{
-        The CRPS of a standard Gumbel distribution, $\text{Gumbel}(\mu=0, \beta=1)$, estimated by 500 samples is
-        calculated against an observation at $0$.
-        The top figure shows the emperical cdf of the samples while the curve in the bottom plot shows the squared error
-        between the emperical cdf of our samples and the cdf formed by the true observation.
-        The CRPS itself is the area under the bottom curve shown in grey.
-    }
-    \begin{center}
-        \setlength{\fboxsep}{0pt}%
-        \setlength{\fboxrule}{1pt}%
-%        \fbox{
-        \includegraphics[width=120mm]{figs/gumbel_crps}
-%        }
-    \end{center}
-    \label{fig:gumbel_crps}
-\end{figure}
+%\begin{figure}[htbp]
+%    \caption[Example CRPS calculation of a standard Gumbel distribution]{
+%        The CRPS of a standard Gumbel distribution, $\text{Gumbel}(\mu=0, \beta=1)$, estimated by 500 samples is
+%        calculated against an observation at $0$.
+%        The top figure shows the emperical cdf of the samples while the curve in the bottom plot shows the squared error
+%        between the emperical cdf of our samples and the cdf formed by the true observation.
+%        The CRPS itself is the area under the bottom curve shown in grey.
+%    }
+%    \begin{center}
+%        \setlength{\fboxsep}{0pt}%
+%        \setlength{\fboxrule}{1pt}%
+%%        \fbox{
+%        \includegraphics[width=120mm]{figs/gumbel_crps}
+%%        }
+%    \end{center}
+%    \label{fig:gumbel_crps}
+%\end{figure}
 
 When observing the sample distribution drawn from a trained price density model, extreme outliers can be readily noticed.
 Figure~\ref{fig:badsamples} shows 500 samples which estimate the joint density forecast between two price nodes
