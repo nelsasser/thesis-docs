@@ -25,6 +25,9 @@ We note that a much of the variation in energy prices can be explained by change
 for example the relationship between energy prices and gas prices as shown in Figure.~\ref{fig:price_gas_hist},
 seasonal load patterns as shown in Figure~\ref{fig:weekly_load}, or seasonal generation mixes shown in
 Figure~\ref{fig:weekly_windgen}.
+However, while a well calibrated model can capture the complex, nonlinear relationships of these quantities with the powerful
+capacities provided by deep learning methods, these interactions change over time and with respect to inaccessible,
+such as grid topology.
 
 \begin{figure}[htbp]
     \caption[Relationship between quarterly aggregated day-ahead prices and natural gas prices]{
@@ -79,15 +82,11 @@ Figure~\ref{fig:weekly_windgen}.
     \label{fig:weekly_windgen}
 \end{figure}
 
-While a well calibrated model can capture the complex, nonlinear relationships of these quantities with the powerful
-capacities provided by deep learning methods, these interactions change over time and with respect to data we do not
-have access to, such as grid topology.
-
 As is common in energy price forecasting literature, and timeseries forecasting literature in general, we first
 investigate the benefits of \textit{recalibration}, which is simply adjusting the parameters of the model as more
 recent information becomes available.
-We define our recalibration process as retraining our model from scratch every $T$ market days where $T \in \mathbb{N}^+$
-is a hyperparameter.
+The recalibration process is defined as retraining the model from scratch every $T$ market-days, where
+$T \in \mathbb{N}^+$ is a hyperparameter.
 Setting $T=1$ is equivalent to re-training the model from scratch each day before trade generation and submission and
 setting $T \geq 365$ is equivalent to never recalibrating the model.
 For market-days between recalibration dates the model parameters stay the same and are not updated when new information
@@ -95,10 +94,10 @@ comes in.
 
 We sweep over multiple values of $T < 365$ and compare against a baseline ``fixed'' model that is never recalibrated
 over the 2021 validation set.
-Unsurprisingly, our results, shown in Table~\ref{tab:recalibration}, make it clear that recalibrating model parameters
+Unsurprisingly, the results, shown in Table~\ref{tab:recalibration}, make it clear that recalibrating model parameters
 more often produces better results.
-From these results, we recommend recalibrating the model as often as possible, i.e. daily.
-For the remainder of the experiments in this work we fix the recalibration period to 14 days as we observed this
+From these results, it is recommended to recalibrate the model as often as possible, i.e. daily.
+For the remainder of the experiments in this work the recalibration period is fixed to 14 days as this was observed
 value to be good tradeoff between performance and computation time when running experiment back-tests.
 
 \begin{table}[htb]
@@ -122,7 +121,7 @@ value to be good tradeoff between performance and computation time when running 
 Beyond parameter recalibration, when dealing with non-stationary prices in energy price forecasting literature, and
 again timeseries forecasting literature in general, recent data is more informative to upcoming forecasts than data
 further back in history.
-For example, if forecasting energy prices for the upcoming week we can intuitively reason that data from the most
+For example, if forecasting energy prices for the upcoming week there is intuitive reasoning that data from the most
 recent two weeks in history is a more informative dataset compared to an arbitrary two weeks from two years ago.
 To capture this, practitioners often use a \textit{rolling-window} of data, whereby only data from the most
 recent $R \in \mathbb{N}^+$ examples in history are used to estimate model parameters.
@@ -130,7 +129,7 @@ While this technique may work well for models with few parameters, we found thes
 unsuitable for our work, as shown in Table~\ref{tab:rolling_window} where $R$ represents the number of market-days in our
 training window.
 We believe this is caused by the deep learning model not having enough data to train and generalize well.
-Reducing the dataset significantly results in our model becoming significantly over-parameterized and more likely to
+Reducing the dataset significantly results in the model becoming significantly over-parameterized and more likely to
 over fit to the limited data in training windows.
 
 \begin{table}[htb]
@@ -169,10 +168,10 @@ Fine-tuning is implemented by taking the subset of training observations to be t
 days in history at the time of model recalibration.
 After recalibrating the model parameters on all training examples, the optimized learning rate is reduced and training
 is continued on the subset of $R$ most recent days in history.
-Following from previous results, we perform recalibration and fine-tuning of parameters every 14 days with no parameter
-updates between recalibrations.
+Following from previous results, recalibration and fine-tuning of parameters is performed every 14 market-days with no
+parameter updates between recalibrations.
 We sweep over multiple values of $R$ and compare a baseline model which is only recalibrated but not fine-tuned.
-Our results for the proposed fine-tuning strategy are presented in Table~\ref{tab:finetune}.
+The results for the proposed fine-tuning strategy are presented in Table~\ref{tab:finetune}.
 
 \begin{table}[htb]
     \caption[Results of rolling window fine-tuning]{
@@ -192,7 +191,7 @@ Our results for the proposed fine-tuning strategy are presented in Table~\ref{ta
     \label{tab:finetune}
 \end{table}
 
-We observe that fine-tuning on the most recent examples in history improves both model fit measured via
+Observe that fine-tuning on the most recent examples in history improves both model fit measured via
 median NLL and forecast accuracy measured via mCRPS\@.
 Moreover, reducing the size of the fine-tuning dataset to only the most relevant training examples (in this case more
 recent $\implies$ more relevant) has the largest impact on results.
@@ -201,11 +200,10 @@ observations beyond the most recent days in history (for example, weeks with sim
 
 \section{Improving Sampling Tasks with Adversarial Loss}\label{sec:improving-sampling-tasks}
 
-We next investigate the impact of including the adversarial loss term, $\mathcal{L}_{\text{ADV}}$, in our model and
-how it specifically affects the sampling performance of the model.
-We utilize the same 14-day recalibration method as in previous experiments and also perform fine-tuning on the
-most recent 14-day window.
-We sweep over a range of values for $\lambda_{\text{ADV}} > 0$ and compare against a baseline model without adversarial
+Next, the impact of including the adversarial loss term, $\mathcal{L}_{\text{ADV}}$, in the hybrid loss function and
+how it specifically affects sampling performance of the model are investigated.
+The 14-day recalibration and 14-day fine-tuning window methods are utilized in the following experiments.
+A range of values for $\lambda_{\text{ADV}} > 0$ are swept over and compared against a baseline model without adversarial
 loss, the results are shown in Table~\ref{tab:ganloss}.
 
 \begin{table}[htb]
@@ -226,17 +224,18 @@ loss, the results are shown in Table~\ref{tab:ganloss}.
     \label{tab:ganloss}
 \end{table}
 The inclusion of adversarial loss improves the mCRPS metric.
-To investigate why this may be the case we first note the sensitivity of our CRPS estimator to outliers in our samples.
-Consider the empirical c.d.f for a arbitrary distribution represented by a set of finite samples, if some of our samples
-are extreme outliers then they will carry a non-trivial mass under the tail of the distribution, and depending on the
-number and magnitude of the outliers this tail may over-estimate the tail of the true distribution resulting in a
-degraded CRPS estimation.
+To investigate why, first note the sensitivity of our CRPS estimator to outliers in our samples.
+Consider the empirical c.d.f for a arbitrary distribution represented by a set of finite samples, if some of samples
+are extreme outliers then they will carry a non-trivial mass under the tail of the distribution.
+Depending on the number and magnitude of the outliers this tail may over-estimate the tail of the true distribution
+resulting in a degraded CRPS estimation.
 
 To illustrate this issue with an example, let $\mathcal{U} \sim \text{Gumbel}(\mu=0, \beta=1)$ with realizations $u$.
-We draw 500 samples to construct $\hat{F}_\mathcal{U}$ and compute the estimated CRPS against the realization $y=0$,
-as shown in Figure~\ref{fig:gumbel_crps}, and find $\widehat{CRPS}_{\hat{F}_\mathcal{U}}(0) = 0.3331$.
-We next append a single synthetic outlier at $u=10,000$ to the previous set of samples constructing
-$\hat{F}'_\mathcal{U}$ and compute $\widehat{CRPS}_{\hat{F}'_\mathcal{U}}(0) = 0.3748$.
+The empirical c.d.f. $\hat{F}_\mathcal{U}$ is constructed by drawing 500 samples.
+A second c.d.f. $\hat{F}'_\mathcal{U}$ is constructed using the same examples, however, with a single outlier observation
+$u=10,000$ added to the set of samples.
+For an observation at $y=0$, the CRPS estimators are computed to be $\widehat{CRPS}_{\hat{F}_\mathcal{U}}(0) = 0.3331$
+and $\widehat{CRPS}_{\hat{F}'_\mathcal{U}}(0) = 0.3748$ respectively.
 Clearly, extreme outliers have a detrimental effect on estimated CRPS metrics.
 
 \begin{figure}[htbp]
@@ -257,11 +256,11 @@ Clearly, extreme outliers have a detrimental effect on estimated CRPS metrics.
     \label{fig:gumbel_crps}
 \end{figure}
 
-When observing the sample distribution drawn from a trained price density model extreme outliers can be readily noticed.
+When observing the sample distribution drawn from a trained price density model, extreme outliers can be readily noticed.
 Figure~\ref{fig:badsamples} shows 500 samples which estimate the joint density forecast between two price nodes
-marginalized out from our larger joint forecast.
-Most samples are indistinguishable from one-another and located near the origin as we may expect, however,
-we observe a small number of samples whose magnitudes are on the order of \$$10^7$.
+marginalized out from a larger joint forecast.
+Most samples are indistinguishable from one-another and located near the origin as expected, however,
+observe the small number of samples whose magnitudes are on the order of \$$10^7$.
 It is clear how these samples would severely degrade the CRPS metrics of this forecast.
 
 \begin{figure}[htbp]
@@ -280,13 +279,12 @@ It is clear how these samples would severely degrade the CRPS metrics of this fo
     \label{fig:badsamples}
 \end{figure}
 
-To determine if adversarial loss address this problem in particular we first aim to quantify the occurrences of extreme
+To determine if adversarial loss address this problem in particular, it is necessary to quantify the frequency of extreme
 outliers.
-We start with the matrix $\mathbf{X}_t \in \mathbb{R}^{r \times n}$ representing $r$ samples for our forecast at time
+Starting with the matrix $\mathbf{X}_t \in \mathbb{R}^{r \times n}$ representing $r$ samples for a forecast at time
 $t$ over $n$ price nodes.
-We compute the sample covariance matrix for $\mathbf{X_t}$ and subsequently the eigenvalues of the covariance matrix
-${\sigma_1 \dots \sigma_n}$.
-We define the \textit{total uncertainty} (TU) of our forcast as
+The sample covariance matrix for $\mathbf{X_t}$ associated eigenvalues ${\sigma_1 \dots \sigma_n}$ are computed.
+Let the \textit{total uncertainty} (TU) of our forcast be defined as
 
 \begin{equation*}
     \text{TU}_\mathbf{X_t} = \sum_{i=1}^{n} \sqrt{\sigma_i},
@@ -295,18 +293,17 @@ We define the \textit{total uncertainty} (TU) of our forcast as
 
 which can be interpreted as the cumulative standard deviations in price along each orthogonal dimension in some rotated
 price space.
-We next define the \textit{excess uncertainty} (EU) in as a binary indicator for the total uncertainty exceeding a set
+Next, the \textit{excess uncertainty} (EU) is defined as a binary indicator on the total uncertainty exceeding a set
 threshold,
 
 \begin{equation*}
-    \text{EU}_{\mathbf{X}_t} = \mathbbm{1}_{\left[ TU_{\mathbf{X}_t} \geq 1000 \right]}.
+    \text{EU}_{\mathbf{X}_t} = \mathbbm{1}_{\left[ TU_{\mathbf{X}_t} \geq 1000 \right]},
     \label{eq:excess_unc}
 \end{equation*}
-
-1000 is chosen as the threshold because day-ahead prices rarely exceed the low hundreds of dollars on more than a
+where 1000 is chosen as the threshold because day-ahead prices rarely exceed the low hundreds of dollars on more than a
 handful of nodes at any time, thus this threshold expected to be rarely exceeded under normal market conditions.
 
-Counting the total excess uncertainty over samples drawn for validation forecasts then provides a metric for the
+Counting the total excess uncertainty over all forecasts on the validation set then provides a metric for the
 frequency of outliers,
 
 \begin{equation*}
@@ -340,24 +337,41 @@ uncertainty likely improving the CRPS metrics forecasts.
 
 We hypothesize this effect is due to the ``contraction'' of the reference density when transforming to the target
 density under adversarial loss due to naturally arising mode-collapse phenomena.
-When using a normalizing flow model as the generator of a GAN we may choose to understand mode collapse as the
+When using a normalizing flow model as the generator of a GAN, mode-collapse can be understood as the
 contraction of the target density to a small neighborhood in the target-space\footnote{
     Indeed, results from the original FlowGAN work~\cite{flow_gan} show an exploding $\mathcal{L}_{\text{MLE}}$ when
     trained only on $\mathcal{L}_{\text{ADV}}$ despite high-quality samples still being drawn which furthers this
     density contraction hypothesis.
-}.
+} as demonstrated in Figure~\ref{fig:mode_collapse}.
 
-We believe this contracting behavior helps regularize the mapping of the normalizing flow model in the low-density tails
+\begin{figure}[htbp]
+    \caption[Mode-covering and mode-collapsed density estimators on synthetic data]{
+        A comparison of a mode-covering and mode-collapsed density estimators.
+        \textbf{Left:} the true multi-modal distribution.
+        \textbf{Center:} a mode-covering Flow-GAN density estimator trained using only $\mathcal{L}_{\text{MLE}}$ loss.
+        \textbf{Right:} a mode-collapsed Flow-GAN density estimator trained using only $\mathcal{L}_{\text{ADV}}$ loss.
+    }
+    \begin{center}
+        \setlength{\fboxsep}{0pt}%
+        \setlength{\fboxrule}{1pt}%
+%        \fbox{
+        \includegraphics[width=120mm]{figs/mode-collapse}
+%        }
+    \end{center}
+    \label{fig:mode_collapse}
+\end{figure}
+
+This contracting behavior is believed to regularize the mapping of the normalizing flow model in the low-density tails
 of the estimated target density by pulling density from the tails of the distribution in towards the modes.
-In Figure~\ref{fig:flow_circs} we show a synthetic distribution whose mapping is learned with a normalizing flow model.
+Figure~\ref{fig:flow_circs} shows a synthetic distribution whose density transport map is learned by a normalizing flow model.
 Observe the warping of the reference domain by a set of concentric circles drawn in the reference space and their
 subsequent mappings in the target space.
 Near the tails of the target density there is excessive warping of the reference domain as it becomes more
 difficult for the normalizing flow model to accurately capture low-probability tail behavior due to a lack of training
 observations and penalty for excessive warping of the domain.
 Extrapolating to higher dimensions, this warping would likely cause the occasional sample in reference space to be
-mapped to an egregious outlier in the target space due to a manifestation of the curse of dimensionality.
-Thus, the hypothesized regularizing properties of adversarial loss would reign in excessive warping under our
+mapped to an outlier in the target space due to a manifestation of the curse of dimensionality.
+Thus, the hypothesized regularizing properties of adversarial loss would rein in excessive warping under an
 estimated mapping.
 In the context of our work it is enticing to refer to the inclusion of adversarial loss as \textit{adversarial
 regularization} due to the properties observed.
@@ -385,18 +399,18 @@ regularization} due to the properties observed.
 
 Finally, we compare our proposed probabilistic forecasting methodology (including recalibration, fine-tuning, and
 adversarial regularization) against several baseline traditional point forecasting methods.
-We first compare against two open source state-of-the-art energy price forecasting models in literature provided by the
-\texttt{epf-toolbox}~\cite{epftoolbox} python library.
+Comparisons are first provided against two open source state-of-the-art energy price forecasting models in literature
+found in the \texttt{epf-toolbox}~\cite{epftoolbox} python library.
 We compare against both the modified \textit{lasso estimated auto-regressive} (EPF-LEAR) model and modified
 \textit{deep neural network} (EPF-DNN) model as described in Section~\ref{sec:baselines}.
-We note that a significant downside to these models is they are only defined for single price nodes, making multi-node
+Note, a significant downside to these models is they are only defined for single price nodes, making multi-node
 forecasts significantly more expensive to obtain and the resulting forecasts would likely fail sufficiently to capture
-and joint structure between node forecasts.
-As such, we only perform comparisons at a select few price nodes.
+the joint structure between node prices.
+As such, only comparisons at a select few price nodes are performed.
 For each price node, a single DNN model and 24 hourly LEAR models a constructed.
 Univariate density forecasts for each price are obtained by marginalizing out samples from the entire joint density
 forecast.
-To match the parameter recalibration of our proposed models, we follow the same training and recalibration procedures
+To match the parameter recalibration of our proposed models, the same training and recalibration procedures are followed
 with both the EPF-LEAR and EPF-DNN models.
 Comparisons between the CRPS of our probabilistic forecasts (cINN) against the MAE of the EPF-DNN and EPF-LEAR forecasts
 are shown in Table~\ref{tab:epf_comp}.
@@ -424,12 +438,12 @@ price nodes and uncertainty in forecasts which non-probabilistic forecasts fail 
     \label{tab:epf_comp}
 \end{table}
 
-Next, we compare against forecasts from the commercial OPF solver.
-The solver only produces point forecasts on a subset of 14 of our price nodes, thus we marginalize out the joint
-density forecast on those specific nodes when comparing against our probabilistic forecasts.
-Again, we compare the MAE of the OPF forecasts against the mCRPS of our probabilistic forecast with our results shown
+Next, the proposed density forecasting methodology is compared against the commercial OPF solver.
+The solver only produces point forecasts on a subset of 14 of our price nodes, thus the joint
+density forecast on those specific nodes is marginalized out from the larger joint density.
+Again, the MAE of the OPF forecasts is compared against the mCRPS of the probabilistic forecast with results shown
 in Table~\ref{tab:opf_comp}.
-Our proposed probabilistic forecasting strategy is more accurate than the commercial, physics-based price
+The probabilistic forecasting strategy is more accurate than the commercial, physics-based price
 forecasting tool, again with the added benefit of information-rich joint probabilistic forecasts as opposed to
 low-information point forecasts.
 
