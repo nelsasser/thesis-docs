@@ -6,22 +6,20 @@ A family of methods for density estimation fall under the umbrella term of \text
 Let $\pi: \mathbb{R}^n \mapsto \mathbb{R}^+$ refer to the \textit{target density} that we wish to estimate
 and $\eta: \mathbb{R}^n \mapsto \mathbb{R}^+$ refer to a known \textit{reference density} with which we can evaluate
 likelihoods and draw samples from.
-If $\pi$ and $\eta$ are smooth and continuous over $\mathbb{R}^n$ then there is a smooth bijection (diffeomorphism)
+If $\pi$ and $\eta$ both are smooth and continuous over $\mathbb{R}^n$ then there is a smooth bijection (diffeomorphism)
 $T: \mathbb{R}^n \mapsto \mathbb{R}^n$ such that the following change of variables relationship holds,
 
 \begin{equation*}
     \pi(x) = \eta\left( z=T^{-1}(x) \right) \left| \det J_T(x) \right|^{-1},
     \label{eq:change-of-vars}
 \end{equation*}
-
 where $J_T(x)$ is the Jacobian matrix of $T$ evaluated at $x$.
 We refer to the operation $z = T^{-1}(x)$ as a \textit{pull-back} of $x$ in target-space to the associated $z$ in
 reference-space.
 It is then clear that we can evaluate the likelihood of observing some $x$ under $\pi$ by a
-\textit{pull-back} operation to find the associated $z$ and evaluating the likelihood of $z$ under $\eta$.
+pull-back operation to find the associated $z$ and evaluating the likelihood of $z$ under $\eta$.
 Note that $\left| \det J_T(x) \right|^{-1}$ must be used to normalize changes in volume incurred by $T$ to retain a
 valid probability density function; as such, it is important for $T$ to have a tractable Jacobian determinant.
-
 Sampling $x \sim \pi$ can be accomplished by drawing a sample $z \sim \eta$ and evaluating the analogous
 \textit{push-forward} operation $x = T(z)$.
 
@@ -69,31 +67,32 @@ Each coupling block function $v = f_{\theta_\ell}(u)$ has the following form: Fi
 into two equally sized partitions $u = \left[ u_1 \;\; u_2 \right]$,
 
 \begin{align}
-    v_1 &= u_1 \nonumber \\
-    v_2 &= u_2 \odot \exp(s(u_1)) + t(u_1) \nonumber
+    v_1 &= u_1, \nonumber \\
+    v_2 &= u_2 \odot \exp(s(u_1)) + t(u_1). \nonumber
 \end{align}
 
 Consequently, $v = \left[ v_1 \;\; v_2 \right]$.
-Functions $s$ and $t$ are neural networks referred to as the \textit{scale} and \textit{transform} networks respectively.
+Functions $s$ and $t$ are neural networks referred to as the \textit{scale} and \textit{transform} networks respectively
+whose parameters are collectively exhaustive subsets of $\theta_\ell$.
 The structure of the affine coupling block leads to a lower-triangular Jacobian, whose log-determinant is the
 sum over the components from the output of $s$.
 
-Affine may limit the interactions between certain subsets of components.
-For instance, partitioning the input by the first and second halves would result in applying the identity to
-the first half of the components,
+Affine coupling flows may limit the interactions between certain subsets of components.
+For instance, partitioning the input by the first and second halves for all coupling blocks would result in applying
+the identity to the first half of the components likely resulting in a poor density estimator.
 Adequate ``mixing'' of components can be accomplished by permuting the components between flow layers, achieved
 generally through random orthonormal projections or 1x1 convolutional filters, depending on the architecture of the
 model and application domain.
 
 \section{Conditional Invertible Neural Network}\label{sec:conditional-invertible-neural-network}
 
-The conditional invertible neural network (cINN)~\cite{cinn} is a variation of the Real-NVP architecture designed for
-conditional density estimation tasks, conditioning on quantities $c \in \mathbb{R}^m$.
+The conditional invertible neural network (cINN)~\cite{cinn} is a further development of the Real-NVP architecture
+that improves the expressiveness of each flow layer and add support for conditional density estimation.
 
-Similar to Real-NVP, we have a composition of $L$ functions, with component partitioning schemes, interspersed with $L-1$
+Similar to Real-NVP, we have a composition of $L$ functions with component partitioning schemes, interspersed with $L-1$
 component permutations for adequate component interaction.
-However, we instead refer to the functions as \textit{conditional coupling blocks} and each function
-$v = f_{\theta_\ell}(u)$ has the following structure,
+Let $c \in \mathbb{R}^m$ be the conditional quantities and $v = f_{\theta_\ell}(u; c)$ be a
+\textit{conditional coupling block} with the following structure,
 
 \begin{align}
     v_1 &= u_1 \odot \exp\left( s_1(u_2; c) \right) + t_1(u_2; c) \\
@@ -102,7 +101,7 @@ $v = f_{\theta_\ell}(u)$ has the following structure,
 
 Functions $s_1$, $s_2$, $t_1$, and $t_2$ are neural networks whose parameters are collectively exhaustive subsets of
 $\theta_\ell$.
-The construction of $f_{\theta_\ell}$ enables efficient calculation of the log Jacobian-determinant as the
+The definition of $f_{\theta_\ell}$ enables efficient calculation of the log Jacobian-determinant as the
 sum over the components of the outputs from $s_1$ and $s_2$.
 Including $c$ to the input of all neural networks across all coupling blocks enables conditional
 density estimation, however, an unconditional density estimate can be constructed without these quantities.
@@ -113,9 +112,9 @@ operation, whose processes are illustrated in Figure~\ref{fig:moon_flows}.
 \begin{figure}[htbp]
     \caption[Conditional normalizing flow density estimation on synthetic data]{
         A conditional normalizing flow comprised of three coupling blocks applied to a synthetic dataset.
-        The far left panel depicts samples drawn from a reference standard Gaussian distribution.
-        The far right panel shows the same samples after the conditional push-forward operation has been applied.
-        The center two panels capture the intermediate transformations as the samples are pushed through the coupling blocks.
+        \textbf{Left:} samples drawn from a reference standard Gaussian distribution.
+        \textbf{Right:} samples after the conditional push-forward operation has been applied.
+        \textbf{Center:} intermediate transformations as the samples are pushed through the coupling blocks.
     }
     \begin{center}
         \setlength{\fboxsep}{0pt}%
@@ -146,7 +145,7 @@ The goal of a generative model is to construct a probabilistic \textit{generator
 such that samples drawn from $x \sim G$ are ``realistic'' compared to those drawn from a true target distribution
 $x \sim \pi$.
 Determining if a sample is realistic  (i.e. a binary classification to determine if the sample is drawn from $\pi$) is
-accomplished with a secondary model referred to as the \textit{discriminator} or critic $D: \mathbb{R}^n \mapsto (0, \; 1)$.
+accomplished with a secondary model referred to as the \textit{discriminator} or critic $D: \mathbb{R}^n \mapsto [0, \; 1]$.
 Since $G$ and $D$ are unknown, let $G_\theta$ and $D_\phi$ be functions parameterized by $\theta$ and $\phi$ respectively.
 
 The objective of the discriminator is to correctly classify whether a given observation comes from $G_\theta$ or $\pi$.
@@ -163,7 +162,7 @@ The objective of the generator is to generate samples that are indistinguishable
 Similarly, estimating $\theta$ by maximimum likelihood yields,
 
 \begin{equation}
-    \max_{\theta} \underset{z \sim G_\theta}{\mathbb{E}}\left[ \log D_\phi(z) \right]
+    \max_{\theta} \underset{z \sim G_\theta}{\mathbb{E}}\left[ \log D_\phi(z) \right].
     \label{eq:adv_loss}
 \end{equation}
 
@@ -185,8 +184,8 @@ The phenomenon of \textit{mode-collapse} is another pervasive problem of GANs, w
 generate samples within a small neighborhood of the target distribution resulting in high-quality samples that lack
 diversity.
 This arises because the generator is only trained to draw samples which have high-likelihood of originating from $\pi$
-under the discriminator, however it is trivial for the generator to over-fit by generating high-quality samples in only
-a small region of the target distribution.
+according to the discriminator, however, it is trivial for the generator to over-fit by generating high-quality samples
+only from a small region of the target distribution.
 An illustrative example is generating hand-drawn digits, where a \textit{mode-covering} model would be able to generate
 realistic images for all digits $0-9$, a \textit{mode-collapsed} model would only be able to generate realistic images
 for a subset of digits or only a single digit.

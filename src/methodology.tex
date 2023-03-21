@@ -58,7 +58,7 @@ Our proposed strategy to characterize the forecast density estimators is as foll
     is the $m \times m$ identity matrix.
     Note that the feature extraction network and its respective parameters are included when referring to $f_\theta$.
 
-    \item Construct a discriminator $D_\phi : \mathbb{R}^{n + m} \mapsto (0,\;1)$ with which to evaluate $\mathcal{L}_{\text{ADV}}$,
+    \item Construct a discriminator $D_\phi : \mathbb{R}^{n + m} \mapsto [0,\;1]$ with which to evaluate $\mathcal{L}_{\text{ADV}}$,
     and select a value for $\lambda_{\text{ADV}}$ to control the emphasis on $\mathcal{L}_{\text{MLE}}$ or
     $\mathcal{L}_{\text{ADV}}$ in the hybrid loss function.
 
