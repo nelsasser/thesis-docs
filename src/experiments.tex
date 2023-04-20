@@ -79,119 +79,82 @@ For the experiments in this section note $\lambda_{\text{ADV}} = 0$.
     \label{fig:weekly_windgen}
 \end{figure}
 
-As is common in energy price forecasting literature, and time-series forecasting literature in general, we first
-investigate the benefits of \textit{recalibration}, which is simply adjusting the parameters of the model as more
-recent information becomes available.
-The recalibration process is defined as retraining the model from scratch every $T$ market-days, where
-$T \in \mathbb{N}^+$ is a hyperparameter.
-Setting $T=1$ is equivalent to re-training the model from scratch each day before trade generation and submission and
-setting $T \geq 365$ is equivalent to never recalibrating the model.
-For market-days between recalibration dates, the model parameters stay the same and are not updated when new information
-comes in.
-
-We sweep over multiple values of $T < 365$ and compare against a baseline that is never recalibrated
-over the 2021 validation set.
-Unsurprisingly, the results, shown in Table~\ref{tab:recalibration}, make it clear that recalibrating model parameters
-more often produces better results.
-From these results, it is recommended to recalibrate the model as often as possible, i.e. daily.
-For the remainder of the experiments in this work, the recalibration period is fixed to 14 days as this was observed
-value to be a good tradeoff between performance and computation time when running experiment back-tests.
-
-\begin{table}[htb]
-    \caption[Results of parameter recalibration]{
-        Evaluation metrics comparing various parameter recalibration intervals.
-    }
-    \begin{center}
-        \begin{tabular}{||c|c|c|c||} \hline
-        Recalibration Interval ($T$) & Median NLL (-)  & $99\%$ NLL (-) & mCRPS (-)  \\	% footnote symbols!
-        \hline \hline
-        $\geq$ 365  &         -26.337  &         86.574  &        10.392  \\ \hline
-        90        &         -41.724  &         65.773  &         9.413  \\ \hline
-        30        & \textbf{-48.487} &         73.809  &         8.463  \\ \hline
-        14        &         -44.127  & \textbf{63.294} & \textbf{7.508} \\ \hline
-        \end{tabular}
-        \\ \rule{0mm}{5mm}
-    \end{center}
-    \label{tab:recalibration}
-\end{table}
-
-Beyond parameter recalibration, when dealing with non-stationary prices in energy price forecasting literature, and
-again time-series forecasting literature in general, recent data is more informative to upcoming forecasts than data
-further back in history.
-For example, if forecasting energy prices for the upcoming week there is intuitive reasoning that data from the most
-recent two weeks in history is a more informative dataset compared to an arbitrary two weeks from two years ago.
-To capture this, practitioners often use a \textit{rolling-window} of data, whereby only data from the most
-recent $R \in \mathbb{N}^+$ examples in history are used to estimate model parameters.
-While this technique may work well for models with few parameters, we found these methods to be generally
-unsuitable for our work, as shown in Table~\ref{tab:rolling_window} where $R$ represents the number of market-days in our
-training window.
-This is likely caused by the models becoming over-parameterized and overfitting on the reduced amounts of training data.
-
-\begin{table}[htb]
-    \caption[Results of reducing rolling training window size]{
-        Evaluation metrics on reduced rolling training window sizes.
-    }
-    \begin{center}
-        \begin{tabular}{||c|c|c|c||} \hline
-        Window Size ($R$) & Median NLL (-)  & $99\%$ NLL (-) & mCRPS (-)  \\	% footnote symbols!
-        \hline \hline
-        $\infty$ &         -44.127  & \textbf{63.294} & \textbf{7.508} \\ \hline
-        90     & \textbf{-47.907} &        283.582  &         8.327  \\ \hline
-        30     &         -20.01   &       1004.566  &        13.73   \\ \hline
-        14     &          25.551  &     418573.25   &        15.43   \\ \hline
-        \end{tabular}
-        \\ \rule{0mm}{5mm}
-    \end{center}
-    \label{tab:rolling_window}
-\end{table}
-
-Instead, we \textit{emphasize} the most recent or most important training observations for the upcoming forecast window.
-We note two possible ways one could go about this,
-
+The following three strategies are proposed for increasing the forecasting skill on non-stationary energy
+market data:
 \begin{enumerate}
-    \item Construct a set of weights $\left\{ w_i \right\}_{i=1}^K$ such that $w_i \in [0, 1]$ and
-    $\sum_{i=1}^K w_i = 1$ where $K$ is the number of observations in the training set.
-    Let weight $w_i$ be the probability of drawing training observation $i$, then we can perform random sampling with
-    replacement on our training set to train our model with emphasis on observations with greater weight.
-    \item Train on all $K$ observations in history.
-    Then, construct a subset of $K' < K$ training observations and \textit{fine-tune} the trained model parameters on
-    the subset of data.
+    \item \textbf{Parameter recalibration.} Parameter recalibration (PR) is a common tool used in timeseries
+    forecasting whereby after some amount of time has passed and new data
+    has become available the parameters of the forecasting model are updated
+    using the new observations.
+    Let $T \in \mathbb{N}^+$ be a hyperparameter representing the number of
+    market-days between recalibrations.
+    The model will produce a set of forecast for a single $T$-day interval
+    using fixed parameters, after which, the observations in the $T$-day
+    interval are added to the training set and the model is re-trained from
+    scratch on the extended history.
+    $T=1$ is equivalent to re-training the model from scratch each day before
+    trade submission while $T \geq 365$ is equivalent to never recalibrating
+    over the entirety of 2021.
+    \item \textbf{Rolling training windows.} Rolling training data windows (RT) are another common timeseries
+    forecasting tool when old data is assumed to be ``less predictive'' than
+    the most recent data.
+    Instead of extending the training data by appending new observations to
+    history, the size of the training dataset remains fixed and only the most
+    recent observations are held for training.
+    Let $R \in \mathbb{N}^+$ be a hyperparameter representing the number of
+    market-days in the rolling training window.
+    When combined with a recalibration interval of $T$ days, after forecasting
+    is complete the most-recent observations from the new $T$-day interval
+    replace the oldest training observations and the model is trained from
+    scratch on the reduced history.
+    \item \textbf{Rolling fine-tuning windows.} Rolling fine-tuning windows (FT) extend the idea of rolling training
+    windows, however, without reducing the size of the training dataset.
+    Let $R \in \mathbb{N}^+$ be a hyperparameter representing the number of
+    market-days in the rolling fine-tuning window.
+    Just like in parameter recalibration, forecasts are produced for
+    $T$-day intervals whose observations are then appended to the training
+    data before the model is re-trained from scratch.
+    However, after the initial round of training the model is fine-tuned by
+    reducing the learning rate and briefly continuing training on a subset
+    of the most recent $R$-days in the extended history.
 \end{enumerate}
 
-We pursue only the fine-tuning approach here.
-Fine-tuning is implemented by taking the subset of training observations to be the $R$ most recent
-days in history at the time of model recalibration.
-After recalibrating the model parameters on all training examples, the optimized learning rate is reduced and training
-is continued on the subset of $R$ most recent days in history.
-Following from previous results, recalibration and fine-tuning of parameters is performed every 14 market-days with no
-parameter updates between recalibrations.
-We sweep over multiple values of $R$ and compare a baseline model which is only recalibrated but not fine-tuned.
-The results for the proposed fine-tuning strategy are presented in Table~\ref{tab:finetune}.
+These updating methods are compared against a baseline with parameters that are trained once and never updated with
+results in Table~\ref{tab:nonstat}.
+Parameter recalibration is shown to improve forecasting skill as the recalibration frequency increases, suggesting that
+the most recent market data is substantially more predictive than older observations.
+This observation, coupled with short training times, makes the daily recalibration of this model a practical
+recommendation.
+Inclusion of rolling training data windows with parameter recalibration is shown to negatively impact forecasting
+performance, with smaller training window sizes causing substantial degradations.
+This is likely caused by overfitting on the smaller training windows leading to reduced out-of-sample performance.
+Use of the fine-tuning strategy, however, greatly improves performance.
+Observing mCRPS metrics, reducing the fine-tuning window size yields more accurate forecasts, which is likely explained
+by the fine-tuning emphasizing relevant (in this case the mose recent) historical observations and further
+suggests that the most recent data has the most predictive power.
+We believe further refinement of the fine-tuning methodology, in terms of identifying and selecting the ``most
+relevant'' data points aside from those most recently observed, can likely lead to more performance gains.
 
 \begin{table}[htb]
-    \caption[Results of rolling window fine-tuning]{
-        Comparison of fine-tuning rolling window sizes
+    \caption[Comparison of strategies for handling non-stationary data]{
+        Evaluation metrics comparing methodologies to handle non-stationary data.
     }
     \begin{center}
         \begin{tabular}{||c|c|c|c||} \hline
-        Window Size ($R$) & Median NLL (-)  & $99\%$ NLL (-) & mCRPS (-)  \\	% footnote symbols!
+        Update Method & Median NLL (-)  & $99\%$ NLL (-) & mCRPS (-)  \\	% footnote symbols!
         \hline \hline
-        None &          -44.127  & \textbf{63.294} &         7.508  \\ \hline
-        14   &          -49.839  &         65.27   & \textbf{5.723} \\ \hline
-        45   &  \textbf{-52.346} &         66.59   &         6.686  \\ \hline
-%        90   & xxx & xxxx & xxx \\ \hline
+        None                         &         -26.337  &         86.574  &        10.392  \\ \hline
+        PR ($T = 90$)                &         -41.724  &         65.773  &         9.413  \\
+        PR ($T = 14$)                &         -44.127  & \textbf{63.294} &         7.508  \\ \hline
+        PR + RT ($T = 14$, $R = 90$) &         -47.907  &        283.582  &         8.327  \\
+        PR + RT ($T = 14$, $R = 14$) &          25.551  &     418573.25   &        15.43   \\ \hline
+        PR + FT ($T = 14$, $R = 45$) & \textbf{-52.346} &         66.59   &         6.686  \\
+        PR + FT ($T = 14$, $R = 14$) &         -49.839  &         65.27   & \textbf{5.723} \\ \hline
         \end{tabular}
         \\ \rule{0mm}{5mm}
     \end{center}
-    \label{tab:finetune}
+    \label{tab:nonstat}
 \end{table}
-
-Observe that fine-tuning on the most recent examples in history improves both model fit measured via
-median NLL and forecast accuracy measured via mCRPS\@.
-Moreover, reducing the size of the fine-tuning dataset to only the most relevant training examples (in this case more
-recent $\implies$ more relevant) has the largest impact on results.
-Future work may investigate a better selection method for the fine-tuning dataset to obtain important training
-observations beyond the most recent days in history (for example, weeks with similar weather and load patterns).
 
 \section{Improving Sampling Tasks with Adversarial Loss}\label{sec:improving-sampling-tasks}
 
