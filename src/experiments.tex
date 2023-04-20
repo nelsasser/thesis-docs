@@ -1,11 +1,10 @@
 \chapter{Experiments}\label{ch:experiments}
 
-We use the same cINN normalizing flow architecture, spectral-normalized GAN (SN-GAN)~\cite{sngan} discriminator architecture, and
+The same cINN normalizing flow architecture, spectral-normalized GAN (SN-GAN)~\cite{sngan} discriminator architecture, and
 Adam optimizer parameters between all experiments.
 The details of the common model and optimizer hyperparameters are listed in Appendix~\ref{ch:model-and-optimizer-hyperparameters}.
-
-We split the dataset into 2019 and 2020 solely for training and hold out 2021 for evaluation.
-We follow a strict backtesting procedure where a model producing forecasts for an upcoming market-day has only been
+The dataset is split into 2019 and 2020 solely for training and 2021 is held out for evaluation.
+A strict backtesting procedure is followed, where a model producing forecasts for an upcoming market-day has only been
 trained on data that would be available to a real participant prior to the market-day.
 
 All models in this work were trained on an NVIDIA GTX 1060--6GB GPU using Python v3.10.8 and PyTorch v1.13.0.
@@ -15,30 +14,28 @@ Ryzen 3700x @ 3.6GHz with 16GB RAM and a 2020 Intel i7 @ 2.3GHz 13-inch Apple Ma
 
 \section{Capturing Non-Stationary Prices}\label{sec:capturing-non-stationary-prices}
 
-We first investigate the ability of our model to capture how energy price distributions change over time.
-All experiments in this section use a vanilla normalizing flows model, ignoring the adversarial loss term by setting
-$\lambda_{\text{ADV}} = 0$ in~\eqref{eq:flowgan_loss}.
-As energy prices are fundamentally driven, we can ascribe changes in the price distributions to changes in factors such
-as \textit{grid topology}, \textit{fuel prices}, \textit{population and load patterns}, \textit{generator outages},
+Changes in market fundamentals over time lead to non-stationary price distributions, with key factors including:
+\textit{grid topology}, \textit{fuel prices}, \textit{population and load patterns}, \textit{generator outages},
 \textit{renewable penetration}, \textit{generation mix}, \textit{weather patterns}, etc.
-We note that a much of the variation in energy prices can be explained by changes in the fundamentals of our dataset,
-for example the relationship between energy prices and gas prices as shown in Figure.~\ref{fig:price_gas_hist},
+Much of the variation in energy prices can be explained by changes in the fundamentals of the dataset,
+for example, the relationship between energy prices and gas prices as shown in Figure.~\ref{fig:price_gas_hist},
 seasonal load patterns as shown in Figure~\ref{fig:weekly_load}, or seasonal generation mixes shown in
 Figure~\ref{fig:weekly_windgen}.
-However, while a well calibrated model can capture the complex, nonlinear relationships of these quantities with the powerful
-capacities provided by deep learning methods, these interactions change over time and with respect to inaccessible,
-such as grid topology.
+However, while a well-calibrated model can capture the complex, nonlinear relationships of these quantities with the
+powerful capacities provided by deep learning methods, these interactions change over time, and with respect to
+inaccessible quantities such as grid topology.
+Thus, energy price forecasting methods must accurately track the non-stationary distributions and quickly adapt as
+new data becomes available.
+For the experiments in this section note $\lambda_{\text{ADV}} = 0$.
 
 \begin{figure}[htbp]
-    \caption[Relationship between quarterly aggregated day-ahead prices and natural gas prices]{
-        Relationship between day-ahead LMPs and natural gas prices.
+    \caption[Quarterly aggregated day-ahead prices v.s. natural gas spot prices]{
+        Quarterly distributions of Chicago Hub DA-LMPs and natural gas spot prices over time.
         The left-y-axis and histograms show the distribution of Chicago Hub DA-LMPs aggregated
-        on a quarterly basis.
-        The right-y-axis and black dots-and-flyers show quaterly aggregate natural gas prices at TETCO-M3
-        where the dots represent the mean price and the upper, lower flyers represent the $75^{\text{th}}$ and
+        quarterly.
+        The right-y-axis and black dots-and-flyers show quarterly aggregate natural gas prices at TETCO-M3
+        where the dots represent the mean price. The upper and lower flyers represent the $75^{\text{th}}$ and
         $25^{\text{th}}$ percentiles respectively.
-        Observe the relationship between the mean and tails of the gas price distributions and the shape
-        of the DA price distributions over time.
     }
     \begin{center}
         \setlength{\fboxsep}{0pt}%
@@ -52,9 +49,9 @@ such as grid topology.
 
 \begin{figure}[htbp]
     \caption[Total aggregate load v.s. day-ahead prices]{
-        The relationship between day-ahead LMPs and seasonal load patters.
-        The left-y-axis and blue curve shows mean total load forecast in PJM aggregated on a weekly basis.
-        The right-y-axis and orange curve show the weekly aggregate mean Chicago Hub DA-LMP.
+        Weekly averaged Chicago Hub DA-LMPs v.s. PJM total load forecasts.
+        The left-y-axis and blue curve show the total load forecast in PJM averaged weekly.
+        The right-y-axis and orange curve show the Chicago Hub DA-LMP averaged weekly.
     }
     \begin{center}
         \setlength{\fboxsep}{0pt}%
@@ -68,9 +65,9 @@ such as grid topology.
 
 \begin{figure}[htbp]
     \caption[Total aggregate wind generation v.s. day-ahead prices]{
-        The relationship between day-ahead LMPs and seasonal wind generation patters.
-        The left-y-axis and blue curve shows mean total wind generation forecast in PJM aggregated on a weekly basis.
-        The right-y-axis and orange curve show the weekly aggregate mean Chicago Hub DA-LMP.
+        Weekly averaged Chicago Hub DA-LMPs v.s. PJM total wind generation forecasts.
+        The left-y-axis and blue curve show the total wind generation forecast in PJM averaged weekly.
+        The right-y-axis and orange curve show the Chicago Hub DA-LMP averaged weekly.
     }
     \begin{center}
         \setlength{\fboxsep}{0pt}%
@@ -82,27 +79,27 @@ such as grid topology.
     \label{fig:weekly_windgen}
 \end{figure}
 
-As is common in energy price forecasting literature, and timeseries forecasting literature in general, we first
+As is common in energy price forecasting literature, and time-series forecasting literature in general, we first
 investigate the benefits of \textit{recalibration}, which is simply adjusting the parameters of the model as more
 recent information becomes available.
 The recalibration process is defined as retraining the model from scratch every $T$ market-days, where
 $T \in \mathbb{N}^+$ is a hyperparameter.
 Setting $T=1$ is equivalent to re-training the model from scratch each day before trade generation and submission and
 setting $T \geq 365$ is equivalent to never recalibrating the model.
-For market-days between recalibration dates the model parameters stay the same and are not updated when new information
+For market-days between recalibration dates, the model parameters stay the same and are not updated when new information
 comes in.
 
-We sweep over multiple values of $T < 365$ and compare against a baseline ``fixed'' model that is never recalibrated
+We sweep over multiple values of $T < 365$ and compare against a baseline that is never recalibrated
 over the 2021 validation set.
 Unsurprisingly, the results, shown in Table~\ref{tab:recalibration}, make it clear that recalibrating model parameters
 more often produces better results.
 From these results, it is recommended to recalibrate the model as often as possible, i.e. daily.
-For the remainder of the experiments in this work the recalibration period is fixed to 14 days as this was observed
-value to be good tradeoff between performance and computation time when running experiment back-tests.
+For the remainder of the experiments in this work, the recalibration period is fixed to 14 days as this was observed
+value to be a good tradeoff between performance and computation time when running experiment back-tests.
 
 \begin{table}[htb]
     \caption[Results of parameter recalibration]{
-        Comparison of various model recalibration intervals.
+        Evaluation metrics comparing various parameter recalibration intervals.
     }
     \begin{center}
         \begin{tabular}{||c|c|c|c||} \hline
@@ -119,7 +116,7 @@ value to be good tradeoff between performance and computation time when running 
 \end{table}
 
 Beyond parameter recalibration, when dealing with non-stationary prices in energy price forecasting literature, and
-again timeseries forecasting literature in general, recent data is more informative to upcoming forecasts than data
+again time-series forecasting literature in general, recent data is more informative to upcoming forecasts than data
 further back in history.
 For example, if forecasting energy prices for the upcoming week there is intuitive reasoning that data from the most
 recent two weeks in history is a more informative dataset compared to an arbitrary two weeks from two years ago.
@@ -128,13 +125,11 @@ recent $R \in \mathbb{N}^+$ examples in history are used to estimate model param
 While this technique may work well for models with few parameters, we found these methods to be generally
 unsuitable for our work, as shown in Table~\ref{tab:rolling_window} where $R$ represents the number of market-days in our
 training window.
-We believe this is caused by the deep learning model not having enough data to train and generalize well.
-Reducing the dataset significantly results in the model becoming significantly over-parameterized and more likely to
-over fit to the limited data in training windows.
+This is likely caused by the models becoming over-parameterized and overfitting on the reduced amounts of training data.
 
 \begin{table}[htb]
-    \caption[Results of reducing the training window]{
-        Comparison multiple sizes of rolling training windows.
+    \caption[Results of reducing rolling training window size]{
+        Evaluation metrics on reduced rolling training window sizes.
     }
     \begin{center}
         \begin{tabular}{||c|c|c|c||} \hline
@@ -201,13 +196,13 @@ observations beyond the most recent days in history (for example, weeks with sim
 \section{Improving Sampling Tasks with Adversarial Loss}\label{sec:improving-sampling-tasks}
 
 Next, the impact of including the adversarial loss term, $\mathcal{L}_{\text{ADV}}$, in the hybrid loss function and
-how it specifically affects sampling performance of the model are investigated.
-The 14-day recalibration and 14-day fine-tuning window methods are utilized in the following experiments.
+how it specifically affects the sampling performance of the model are investigated.
+The aforementioned 14-day recalibration and 14-day fine-tuning window methods are utilized in the following experiments.
 A range of values for $\lambda_{\text{ADV}} > 0$ are swept over and compared against a baseline model without adversarial
-loss, the results are shown in Table~\ref{tab:ganloss}.
+loss with results shown in Table~\ref{tab:ganloss}.
 
 \begin{table}[htb]
-    \caption[Results of including adversarial loss]{
+    \caption[Results of adversarial loss inclusion]{
         Comparison of fine-tuning rolling window sizes
     }
     \begin{center}
@@ -224,8 +219,9 @@ loss, the results are shown in Table~\ref{tab:ganloss}.
     \label{tab:ganloss}
 \end{table}
 The inclusion of adversarial loss improves the mCRPS metric.
-To investigate why, first note the sensitivity of our CRPS estimator to outliers in our samples.
-Consider the empirical c.d.f for a arbitrary distribution represented by a set of finite samples, if some of samples
+To investigate why, first recall the definition of the CRPS estimator~\ref{eq:crps_int} and note the sensitivity of the
+CRPS estimator to outliers samples.
+Consider the empirical c.d.f for an arbitrary distribution represented by a set of finite samples, if some samples
 are extreme outliers then they will carry a non-trivial mass under the tail of the distribution.
 Depending on the number and magnitude of the outliers this tail may over-estimate the tail of the true distribution
 resulting in a degraded CRPS estimation.
@@ -238,34 +234,16 @@ For an observation at $y=0$, the CRPS estimators are computed to be $\widehat{CR
 and $\widehat{CRPS}_{\hat{F}'_\mathcal{U}}(0) = 0.3748$ respectively.
 Clearly, extreme outliers have a detrimental effect on estimated CRPS metrics.
 
-%\begin{figure}[htbp]
-%    \caption[Example CRPS calculation of a standard Gumbel distribution]{
-%        The CRPS of a standard Gumbel distribution, $\text{Gumbel}(\mu=0, \beta=1)$, estimated by 500 samples is
-%        calculated against an observation at $0$.
-%        The top figure shows the emperical cdf of the samples while the curve in the bottom plot shows the squared error
-%        between the emperical cdf of our samples and the cdf formed by the true observation.
-%        The CRPS itself is the area under the bottom curve shown in grey.
-%    }
-%    \begin{center}
-%        \setlength{\fboxsep}{0pt}%
-%        \setlength{\fboxrule}{1pt}%
-%%        \fbox{
-%        \includegraphics[width=120mm]{figs/gumbel_crps}
-%%        }
-%    \end{center}
-%    \label{fig:gumbel_crps}
-%\end{figure}
-
-When observing the sample distribution drawn from a trained price density model, extreme outliers can be readily noticed.
-Figure~\ref{fig:badsamples} shows 500 samples which estimate the joint density forecast between two price nodes
+When observing the sample distribution drawn from a trained price density model, extreme outliers are not uncommon.
+Figure~\ref{fig:badsamples} shows 500 samples that estimate the joint density forecast between two price nodes
 marginalized out from a larger joint forecast.
-Most samples are indistinguishable from one-another and located near the origin as expected, however,
+Most samples are indistinguishable from one another and located near the origin as expected, however,
 observe the small number of samples whose magnitudes are on the order of \$$10^7$.
 It is clear how these samples would severely degrade the CRPS metrics of this forecast.
 
 \begin{figure}[htbp]
-    \caption[Forecast joint distribution with extreme outliers]{
-        A marginalized joint distribution forecast between WESTERN HUB and AEP GEN HUB price nodes.
+    \caption[Samples drawn joint density forecast with extreme outliers]{
+        Samples from a marginalized joint distribution forecast between WESTERN HUB and AEP GEN HUB price nodes.
         Note the outliers with values on the order of magnitude of \$$10^7$ which exceed both
         reasonable price expectations and hard price limits enforced by PJM.
     }
@@ -279,18 +257,17 @@ It is clear how these samples would severely degrade the CRPS metrics of this fo
     \label{fig:badsamples}
 \end{figure}
 
-To determine if adversarial loss address this problem in particular, it is necessary to quantify the frequency of extreme
+To determine if adversarial loss address this problem specifically, it is necessary to quantify the frequency of extreme
 outliers.
 Starting with the matrix $\mathbf{X}_t \in \mathbb{R}^{r \times n}$ representing $r$ samples for a forecast at time
 $t$ over $n$ price nodes.
 The sample covariance matrix for $\mathbf{X_t}$ associated eigenvalues ${\sigma_1 \dots \sigma_n}$ are computed.
-Let the \textit{total uncertainty} (TU) of our forcast be defined as
+Let the \textit{total uncertainty} (TU) of our forecast be defined as
 
 \begin{equation*}
     \text{TU}_\mathbf{X_t} = \sum_{i=1}^{n} \sqrt{\sigma_i},
     \label{eq:total_uncertainty}
 \end{equation*}
-
 which can be interpreted as the cumulative standard deviations in price along each orthogonal dimension in some rotated
 price space.
 Next, the \textit{excess uncertainty} (EU) is defined as a binary indicator on the total uncertainty exceeding a set
@@ -301,8 +278,7 @@ threshold,
     \label{eq:excess_unc}
 \end{equation*}
 where 1000 is chosen as the threshold because day-ahead prices rarely exceed the low hundreds of dollars on more than a
-handful of nodes at any time, thus this threshold expected to be rarely exceeded under normal market conditions.
-
+handful of nodes at any time, thus this threshold is expected to be rarely exceeded under normal market conditions.
 Counting the total excess uncertainty over all forecasts on the validation set then provides a metric for the
 frequency of outliers,
 
@@ -312,14 +288,14 @@ frequency of outliers,
 \end{equation*}
 Comparison of the total excess uncertainty for various forecasting strategies are shown in Table~\ref{tab:total_unc}.
 The inclusion of adversarial loss ($\lambda_{\text{ADV}} = 10$) reduces the occurrences of forecasts with excessive
-uncertainty likely improving the CRPS metrics forecasts.
+uncertainty improving the CRPS metrics forecasts.
 
 \begin{table}[htb]
-    \caption[Count of forecasts with excessive uncertainty over various models]{
-        The total excessive uncertainty is captured for four models over the training set.
+    \caption[Count of forecasts with excessive uncertainty]{
+        The total excessive uncertainty count is captured for four models over the evaluation dataset.
         Recalibration and fine-tuning sizes are both set to $14$, $\lambda_{\text{ADV}} = 10$.
         The model denoted as \textit{none} has no recalibration, fine-tuning, or adversarial loss.
-        Strategies are assumed to be ommitted unless specified in the model name.
+        Strategies are assumed to be omitted unless specified in the model name.
     }
     \begin{center}
         \begin{tabular}{||c|c||} \hline
@@ -345,7 +321,7 @@ contraction of the target density to a small neighborhood in the target-space\fo
 } as demonstrated in Figure~\ref{fig:mode_collapse}.
 
 \begin{figure}[htbp]
-    \caption[Mode-covering and mode-collapsed density estimators on synthetic data]{
+    \caption[Mode-covering and mode-collapsed density estimators on 2-d synthetic data]{
         A comparison of a mode-covering and mode-collapsed density estimators.
         \textbf{Left:} the true multi-modal distribution.
         \textbf{Center:} a mode-covering Flow-GAN density estimator trained using only $\mathcal{L}_{\text{MLE}}$ loss.
@@ -364,26 +340,26 @@ contraction of the target density to a small neighborhood in the target-space\fo
 This contracting behavior is believed to regularize the mapping of the normalizing flow model in the low-density tails
 of the estimated target density by pulling density from the tails of the distribution in towards the modes.
 Figure~\ref{fig:flow_circs} shows a synthetic distribution whose density transport map is learned by a normalizing flow model.
-Observe the warping of the reference domain by a set of concentric circles drawn in the reference space and their
-subsequent mappings in the target space.
+The transformation of the reference domain under a push-forward mapping by a set of concentric circles drawn in the
+reference space and their subsequent mappings in the target space.
 Near the tails of the target density there is excessive warping of the reference domain as it becomes more
 difficult for the normalizing flow model to accurately capture low-probability tail behavior due to a lack of training
-observations and penalty for excessive warping of the domain.
+observations (and also perhaps the constraints on the functional form of the affine-coupling layers).
 Extrapolating to higher dimensions, this warping would likely cause the occasional sample in reference space to be
 mapped to an outlier in the target space due to a manifestation of the curse of dimensionality.
 Thus, the hypothesized regularizing properties of adversarial loss would rein in excessive warping under an
 estimated mapping.
-In the context of our work it is enticing to refer to the inclusion of adversarial loss as \textit{adversarial
+In the context of this work it is enticing to refer to the inclusion of adversarial loss as \textit{adversarial
 regularization} due to the properties observed.
 
 \begin{figure}[htbp]
-    \caption[Illustration of domain warping for synthetic 2-d distribution]{
-        The warping of the reference domain under the push-forward opertion of a trained normalizing flow model with
+    \caption[Mapping of the reference domain under the push-forward operation for a density estimator on 2-d synthetic data]{
+        The mapping of the reference domain under the push-forward operation of a trained normalizing flow model with
         with three affine-coupling layers.
         \textbf{Left:} Reference samples shown in blue and concentric circles in the reference domain
         drawn in black.
         \textbf{Right:} Samples pushed-forward into the target space and the same concentric circles
-        warped in the target domain.
+        mapped in the target domain.
     }
     \begin{center}
         \setlength{\fboxsep}{0pt}%
@@ -397,31 +373,32 @@ regularization} due to the properties observed.
 
 \section{Comparison Against Baselines}\label{sec:comparison-against-baselines}
 
-Finally, we compare our proposed probabilistic forecasting methodology (including recalibration, fine-tuning, and
-adversarial regularization) against several baseline traditional point forecasting methods.
+Finally, our proposed probabilistic forecasting methodology (cINN) --- including recalibration, fine-tuning, and
+adversarial regularization --- is compared against several baseline traditional point forecasting methods.
 Comparisons are first provided against two open source state-of-the-art energy price forecasting models in literature
-found in the \texttt{epf-toolbox}~\cite{epftoolbox} python library.
-We compare against both the modified \textit{lasso estimated auto-regressive} (EPF-LEAR) model and modified
-\textit{deep neural network} (EPF-DNN) model as described in Section~\ref{sec:baselines}.
+found in the \texttt{epf-toolbox}~\cite{epftoolbox} python library: the modified
+\textit{lasso estimated auto-regressive} (EPF-LEAR) and \textit{deep neural network} (EPF-DNN) models as described in
+Section~\ref{sec:baselines}.
 Note, a significant downside to these models is they are only defined for single price nodes, making multi-node
 forecasts significantly more expensive to obtain and the resulting forecasts would likely fail sufficiently to capture
 the joint structure between node prices.
 As such, only comparisons at a select few price nodes are performed.
-For each price node, a single DNN model and 24 hourly LEAR models a constructed.
+For each price node, a single DNN model and 24 hourly LEAR models are constructed.
 Univariate density forecasts for each price are obtained by marginalizing out samples from the entire joint density
 forecast.
-To match the parameter recalibration of our proposed models, the same training and recalibration procedures are followed
-with both the EPF-LEAR and EPF-DNN models.
-Comparisons between the CRPS of our probabilistic forecasts (cINN) against the MAE of the EPF-DNN and EPF-LEAR forecasts
+The same training and recalibration procedures previously described are implemented for both the EPF-LEAR and EPF-DNN
+models, however, no rolling training or fine-tuning windows are used.
+Comparisons between the CRPS of the probabilistic forecasts against the MAE of the EPF-DNN and EPF-LEAR forecasts
 are shown in Table~\ref{tab:epf_comp}.
 The proposed density forecasting method produces more accurate forecasts than state-of-the-art point forecasting methods.
-Note, beyond greater forecast accuracy our proposed methodology also captures joint structures between
+Note, beyond greater forecast accuracy the probabilistic forecasts also captures joint structures between
 price nodes and uncertainty in forecasts which non-probabilistic forecasts fail to provide.
 
 \begin{table}[htb]
-    \caption[Comparison of proposed forecasts v.s. open-source state-of-the-art methods]{
-        Comparison of forecast accuracy between our probabilistic forecasting strategy and state-of-the-art
-        models from the $\texttt{epf-toolbox}$~\cite{epftoolbox} python library over single price nodes.
+    \caption[Proposed density forecasts v.s. open-access literature point forecasts]{
+        Comparison of forecast accuracy between the proposed probabilistic forecasting strategy and state-of-the-art
+        point forecasting models from the $\texttt{epf-toolbox}$~\cite{epftoolbox} python library over single price
+        nodes.
     }
     \begin{center}
         \begin{tabular}{||c|c|c|c||} \hline
@@ -441,16 +418,16 @@ price nodes and uncertainty in forecasts which non-probabilistic forecasts fail 
 Next, the proposed density forecasting methodology is compared against the commercial OPF solver.
 The solver only produces point forecasts on a subset of 14 of our price nodes, thus the joint
 density forecast on those specific nodes is marginalized out from the larger joint density.
-Again, the MAE of the OPF forecasts is compared against the mCRPS of the probabilistic forecast with results shown
+Again, the MAE of the OPF forecasts is compared against the mCRPS of the probabilistic forecasts with results shown
 in Table~\ref{tab:opf_comp}.
 The probabilistic forecasting strategy is more accurate than the commercial, physics-based price
 forecasting tool, again with the added benefit of information-rich joint probabilistic forecasts as opposed to
 low-information point forecasts.
 
 \begin{table}[htb]
-    \caption[Comparison of proposed forecasts v.s. commercial optimal powerflow solver]{
+    \caption[Proposed density forecasts v.s. commercial optimal powerflow solver point forecasts]{
         Comparison of forecast accuracy between our proposed probabilistic forecasting strategy and a commercial
-        OPF solver over a subset of 14 prices nodes.
+        OPF solver point forecasting product over a subset of 14 price nodes.
     }
     \begin{center}
         \begin{tabular}{||c|c|c||} \hline
@@ -466,19 +443,17 @@ low-information point forecasts.
 
 Figure~\ref{fig:forecast_timeseries} illustrates forecasts from our joint density method and the three baseline methods
 against observed DA prices on a single node over two time intervals in 2021.
-Observe how the uncertainty in our proposed density forecasting method changes with respect to market conditions.
-Also note that beyond the mean forecast and 95\% confidence intervals, each forecast is a complex probability density
+Observe how the uncertainty in the probabilistic forecasts changes over time with respect to market conditions.
+Also note that beyond the mean forecast and 95\% confidence intervals each forecast is a complex probability density
 function as shown in Figure~\ref{fig:univar_dens}.
 
 \begin{figure}[htbp]
-    \caption[Timeseries of observed v.s. forecast prices]{
+    \caption[Timeseries of observed v.s. forecast prices over 2/12/21-2/17/21 and 8/13/21-8/18/21]{
         Forecasts from the proposed probabilistic forecasting methodology, EPF-LEAR, EPF-DNN, and OPF baselines
         against the true NEW JERSEY HUB DA LMPs over two five-day intervals in 2021.
-        (a) forecasted and observed LMPs over five-days during an extreme winter weather event in Texas
-        that caused unprecendented price action in PJM.
-        (b) forecasted and observed LMPs over a typical five-day interval in the summer.
-        Note the differences in uncertainty and intra-day price action captured by the probabilistic forecasts
-        during the different market conditions.
+        \textbf{Left:} forecasted and observed LMPs over a five-day interval during an extreme winter weather event in Texas which
+        caused unprecedented price action in PJM (2/12/21 - 2/17/21).
+        \textbf{Right:} forecasted and observed LMPs over a five-day interval in the summer (8/13/21 - 8/18/21).
     }
     \begin{center}
         \setlength{\fboxsep}{0pt}%
@@ -491,9 +466,9 @@ function as shown in Figure~\ref{fig:univar_dens}.
 \end{figure}
 
 \begin{figure}[htbp]
-    \caption[Comparison of forecasts at select market-hours]{
-        Forecasts for our proposed probabilistic forecasting methodology and EPF-LEAR, EPF-DNN, and OPF baselines
-        against the true DA prices are shown at the NEW JERSEY HUB price node over four hours in a single market day.
+    \caption[Density forecasts v.s. point forecasts v.s. observed prices on 8/13/21 hours 4, 12, 16, and 20]{
+        Forecasts for the proposed probabilistic forecasting methodology and EPF-LEAR, EPF-DNN, and OPF baselines
+        against the true DA prices are shown at the NEW JERSEY HUB price node at four hours on a single market-day.
     }
     \begin{center}
         \setlength{\fboxsep}{0pt}%

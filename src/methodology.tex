@@ -1,8 +1,8 @@
-\chapter{Methodology}\label{ch:methodology}
+\usepackage{amsmath}\chapter{Methodology}\label{ch:methodology}
 
 \section{Day-Ahead Forecasting Strategy}\label{sec:proposed-methods}
 
-In DA nodal markets, energy prices are settled on an hourly basis, with 24 hours per market-day.
+In DA nodal markets energy prices are settled on an hourly basis.
 Participants are required to submit all trades --- a single trade consists of a \textit{location}, \textit{hour},
 \textit{direction} (buy or sell), \textit{price}, and \textit{volume} --- for a given market-day no later than one-day
 in advance.
@@ -18,8 +18,8 @@ and finally one model per-hour per-node\cite{en9080621}.
 
 In this work, the DA price forecasting problem is approached using a single model to jointly forecast price densities
 across all $n$ nodes and forecasts for each hour are generated independently.
-This joint probabilistic forecasting strategy captures the complex non-linear price distribution between nodes for each
-hour given fundamental market forecasts.
+This joint probabilistic forecasting strategy captures the complex spatially-correlated price distribution between nodes
+for each hour given fundamental market forecasts.
 That is, if $\mathcal{X}_t \subseteq \mathbb{R}^n$ is a random variable with realizations $x_t$ of the nodal LMPs for a
 specific market-hour $t$ and $c_t \in \mathbb{R}^m$ is a real-valued vector of fundamental market forecasts for the
 same market-hour, we propose a model which characterizes the joint conditional probability distribution
@@ -50,12 +50,12 @@ The proposed strategy to characterize the joint conditional density estimators i
     that affect day-ahead nodal energy prices and are available before the trade submission deadline.
 
     \item Choose an $n$-dimensional probability distribution to be the reference distribution $\eta$.
-    Typical choices are standard uniform or Gaussian distributions, however any distribution with tractable
+    Typical choices are standard uniform or Gaussian distributions, however, any distribution with tractable
     log-likelihood evaluations and sampling capabilities could be used.
 
     \item Construct a diffeomorphism $f_\theta : \mathbb{R}^n \mapsto \mathbb{R}^n$ characterized by the cINN architecture
     described in Section~\ref{sec:conditional-invertible-neural-network}.
-    Additionally we must choose a suitable feature extraction network $h(c_t)$.
+    Additionally, a suitable feature extraction network $h(c_t)$ should be chosen.
     Omission of the feature extraction network is equivalent to $h(c_t) = \mathbf{I}c_t$ where $\mathbf{I}$
     is the $m \times m$ identity matrix.
     Note that the feature extraction network and its respective parameters are included when referring to $f_\theta$.
@@ -77,19 +77,19 @@ The proposed strategy to characterize the joint conditional density estimators i
 \section{Datasets}\label{sec:datasets}
 
 \begin{itemize}
-    \item \textbf{Prices}: Historical day-ahead LMP timeseries are obtained for 45 price nodes in the PJM market
+    \item \textbf{Prices}: Historical day-ahead LMP time-series are obtained for 45 price nodes in the PJM market
     capturing prices in all 25 load zones and the interconnections with neighboring markets.
     These prices are published by PJM on an hourly basis shortly after the trade submission deadline for the upcoming
     market-day has passed.
     The full list of nodes can be found in Appendix~\ref{ch:list-of-pjm-price-nodes}.
 
     \item \textbf{Load Forecasts}: Historical hourly load forecasts are obtained for each of the 25 load zones in PJM\@.
-    Zonal load forecasts represent the expected energy demand in mega-watts (MW) in each sub-region of PJM for a given
+    Zonal load forecasts represent the expected energy demand in megawatts (MW) in each sub-region of PJM for a given
     market-hour and are published on an hourly basis by PJM\@.
     These forecasts are available for participants to use during trade generation and submission.
     The full list of load zones can be found in Appendix~\ref{ch:list-of-pjm-load-zones}.
 
-    \item \textbf{Wind Generation Forecasts}: A historical hourly timeseries is obtained for the ISO level wind generation
+    \item \textbf{Wind Generation Forecasts}: A historical hourly time-series is obtained for the ISO-level wind generation
     near-term forecast.
     This forecast is published by PJM and represents the expected total generation (MW) from all wind turbine renewable
     power plants in PJM for a given market-hour and is available to participants during trade generation and submission.
@@ -101,13 +101,13 @@ The proposed strategy to characterize the joint conditional density estimators i
     These forecasts are available to participants during trade generation and submission.
     The full list of NOAA weather stations can be found in Appendix~\ref{ch:list-of-noaa-weather-stations}.
 
-    \item \textbf{Natural Gas Prices}: Historical natural gas spot price timeseries are obtained for the TETCO-M3 hub.
-    The prices reflect the daily volume-weighted-average-price (VWAP) and are reported on a daily basis.
+    \item \textbf{Natural Gas Prices}: Historical natural gas spot price time-series are obtained for the TETCO-M3 hub.
+    The prices reflect the daily volume-weighted-average-price (VWAP) and are reported daily.
     The daily VWAP for the upcoming market-day is unknown, so instead the most recent daily VWAP at the time of
     trade-generation is persisted and used for all 24 hours in the price forecast.
 \end{itemize}
 
-Timeseries for all of the above datasets are captured for the entirety of years 2019, 2020, and 2021.
+Time-series for all of the above datasets are captured for the entirety of years 2019, 2020, and 2021.
 
 \section{Data Pre-Processing}\label{sec:data-pre-processing}
 
@@ -115,20 +115,20 @@ To improve the numerical stability of the stochastic gradient descent algorithm 
 aforementioned quantities to normalize the disparate scaling between feature classes.
 A standard linear scaling strategy on a per-quantity basis was found to be sufficient when applied to all quantities
 despite more complex variance stabilizing scaling strategies proposed in energy forecasting literature~\cite{7997921}.
-Let $\left\{ y_i \right\}_{i=1}^N$ be a historical timeseries for a scalar quantity such that the first $k < N$ values
+Let $\left\{ y_i \right\}_{i=1}^N$ be a historical time-series for a scalar quantity such that the first $k < N$ values
 are used for model training and the remaining values are held out for validation, then the transformation
 $\bar{y}_i = \frac{y_i - \hat{\mu}_y}{\hat{\sigma}_y}$ is applied for $1 \leq i \leq N$ where
-$\hat{\mu}_y,\;\hat{\sigma}_y$ are the empirical mean and standard deviation of training set for the respective quantity.
+$\hat{\mu}_y,\;\hat{\sigma}_y$ are the empirical mean and standard deviation of the training set for the respective quantity.
 
 In addition to the scaled fundamental market forecasts, temporal encodings of the upcoming market-time $t$ are constructed.
 Assuming $t$ contains information on the hour-of-day and elapsed-days-since-epoch (1-1-1970), given by
 $\text{hour}(t) \in \{1, 2, \dots, 24\}$ and $\text{day}(t) \in \mathbb{N}$ respectively, we construct the following three
-sinusoidal encodings to relate temporally-similar market-times,
+sinusoidal encodings to relate temporally similar observations,
 
 \begin{align*}
     \text{Hour-of-Day} &= \left[ \cos\left( \text{hour}(t) \times \frac{2\pi}{24} \right), \; \sin\left( \text{hour}(t) \times \frac{2\pi}{24} \right)\right] \\
     \text{Day-of-Week} &= \left[ \cos\left( \text{day}(t) \times \frac{2\pi}{7} \right), \; \sin\left( \text{day}(t) \times \frac{2\pi}{7} \right)\right] \\
-    \text{Day-of-Year} &= \left[ \cos\left( \text{day}(t) \times \frac{2\pi}{365} \right), \; \sin\left( \text{day}(t) \times \frac{2\pi}{365} \right)\right]
+    \text{Day-of-Year} &= \left[ \cos\left( \text{day}(t) \times \frac{2\pi}{365} \right), \; \sin\left( \text{day}(t) \times \frac{2\pi}{365} \right)\right].
 \end{align*}
 
 
@@ -137,7 +137,7 @@ distributions are 45-dimensional, however, the affine coupling block architectur
 dimensions for the component partitions to be of equal sizes.
 To remedy this, a dummy dimension is created by appending zeros to the price-vector observations bringing the number of
 dimensions up to 46.
-When sampling price forecasts, values from dummy dimension are dropped after applying the push-forward operation.
+When sampling price forecasts, values from the dummy dimension are dropped after applying the push-forward operation.
 
 \section{Baselines}\label{sec:baselines}
 
@@ -148,12 +148,12 @@ however, the models provided in this toolbox are meant to be trained on the data
 The dataset available for PJM only includes day-ahead prices for three price nodes and load forecasts for a single
 load zone and the total system-wide load.
 As such, the models are modified to use all available exogenous quantities and the
-proposed data pre-processing methodologies, however, the proposed sinusoidal temporal encoding are omitted in favor of
+proposed data pre-processing methodologies, however, the proposed sinusoidal temporal encodings are omitted in favor of
 the temporal encodings originally defined in the \texttt{epf-toolbox}.
 
-\subsection{LASSO Estimated Auto-Regressive}\label{subsec:lasso-estimated-auto-regressive}
+\subsection{LASSO Estimated Auto-Regressive Model}\label{subsec:lasso-estimated-auto-regressive}
 
-The \textit{LASSO estimated auto-regressive model} is a parameter-rich auto-regressive model with the capacity to handle
+The \textit{LASSO estimated auto-regressive} (LEAR) model is a parameter-rich auto-regressive model with the capacity to handle
 exogenous variables.
 Let $d(t)$ and $h(t)$ be shorthand for the functions $\text{day}(t),\; \text{hour}(t)$ respectively for a market-time
 $t$, $p_{d(t)} \in \mathbb{R}^{24}$ be the realized day-ahead price at a single price node at market-times on the same
@@ -165,11 +165,9 @@ Then the forecast $\hat{p}_t$ for an upcoming market-time $t$ at a single node i
     \hat{p}_t(\theta) = & \; \sum_{k \in \left\{ 1, 2, 3, 7 \right\}} {\theta^0_{\left[ 24 \times (k-1) : 24 \times k \right]}}^\mathsf{T} p_{d(t) - k} \\
                         & +  \sum_{j=1}^m {\theta^j_{\left[0:24\right]}}^\mathsf{T} x^j_{d(t)} + {\theta^j_{\left[24:48\right]}}^\mathsf{T} x^j_{d(t) - 1} + {\theta^j_{\left[48:96\right]}}^\mathsf{T} x^j_{d(t) - 7} \\
                         & +  {\theta^{m + 1}}^\mathsf{T} \textbf{e}_{\left[d(t) \mod 7\right]} \\
-                        & +  \epsilon.
+                        & +  \epsilon,
 \end{align*}
-
-
-Where $\theta^k \in \mathbb{R}^r$ are parameters with transpose $\theta^\mathsf{T} \in \mathbb{R}^{1 \times r}$ and
+where $\theta^k \in \mathbb{R}^r$ are parameters with transpose $\theta^\mathsf{T} \in \mathbb{R}^{1 \times r}$ and
 parameters ${\theta^k_{\left[i:j\right]}}$ are a subset of parameters $\theta^k$
 characterized by the entries spanning the interval $[i, j)$ with $0 < i < j \leq r$, and
 $\theta^\mathsf{T} = [{\theta^0}^\mathsf{T} \dots {\theta^{m+1}}^\mathsf{T}]$ is the full set of parameters for the LEAR model.
@@ -189,7 +187,7 @@ Over a set of $N$ training days, $\theta_h$ is optimized for a specific market h
 
 \subsection{Deep Neural Network}\label{subsec:deep-neural-network}
 
-The \textit{deep neural network} (DNN) model is a simple feed-forward neural network which produces point forecasts for
+The \textit{deep neural network} (DNN) model is a multi-layer perceptron (MLP) neural network that produces point forecasts for
 a single node at all 24 market-hours simultaneously.
 The DNN is trained on the same quantities as the LEAR model, that is for the upcoming market-day $d$, the neural network
 forecasts the price vector $\hat{p}_d$ using price history $\left\{ p_{d-1}, p_{d-2}, p_{d-3}, p_{d-7} \right\}$,
@@ -202,7 +200,7 @@ Appendix~\ref{ch:model-and-optimizer-hyperparameters}.
 
 The commercial optimal powerflow solver (OPF) is a tool that produces joint point LMP forecasts over a set of nodes
 for a single hour by solving a variation of the \textit{security constrained economic dispatch} (SCED) optimization problem.
-The process by which LMPs are actually produced is derived from a solution of this problem, and the OPF tool
+The process by which LMPs are actually produced is derived from a solution to this problem, and the OPF tool
 aims to forecast the parameters of the SCED problem such that its solution yields price forecasts.
 Explanation of SCED and related power system optimization problems are beyond the scope of this work, however a review
 of these problems and the tools used to solve them can be found in~\cite{opf_textbook}.
@@ -217,7 +215,7 @@ Of those metrics, MAE is the best metric for energy price forecasts because the 
 represent the actual losses one would incur when trading --- that is the profit or loss incurred on a trade scales
 linearly with the difference between the buy and sell prices, analogous to the absolute error between realized and
 forecasted prices.
-Using these metrics for our forecasts would require distillation of the information-rich probabilistic forecasts
+Using these metrics for our forecasts would require the distillation of the information-rich probabilistic forecasts
 down into point forecasts.
 Instead, we use the \textit{continuous ranked probability score} (CRPS)~\cite{crps_rules}, which generalizes the absolute error
 metric to probabilistic forecasts.
@@ -233,7 +231,7 @@ as
 
 We may interpret~\eqref{eq:crps_int} as the mean squared error between the forecast c.d.f. and the c.d.f. given by a
 Dirac delta function at the realized value.
-The CRPS generalizes of the absolute error of a point forecast, illustrated by the substitution of
+The CRPS generalizes the absolute error of a point forecast, illustrated by the substitution of
 $\mathbbm{1}_{\left[ x \leq u\right]}$ for $F_\mathcal{X}(u)$ given a point forecast $x$,
 
 \begin{equation*}
@@ -241,10 +239,16 @@ $\mathbbm{1}_{\left[ x \leq u\right]}$ for $F_\mathcal{X}(u)$ given a point fore
     \int_{\min(x, y)}^{\max(x, y)} du = |x - y|,
 \end{equation*}
 thus enabling direct comparison of probabilistic and point forecasting methods.
+A computation-friendly equivalent expression can also be derived,
+\begin{equation}
+    \text{CRPS}_F(y) = \mathbb{E}\left[X - y\right] - \frac{1}{2}\mathbb{E} \left[X - X'\right],
+    \label{eq:crps_num}
+\end{equation}
+where $X$ and $X'$ are i.i.d. from a distribution with c.d.f. $F$.
 
-In practice, we do not have access to the marginal c.d.f.s of each price node.
-Instead, we draw a set of $M$ samples from our joint conditional density estimator and compute the empirical marginal
-c.d.f of the $j^{\text{th}}$ price node, $\hat{F}_{\mathcal{X}^j}$, as
+In practice, the marginal c.d.f.s of each price node are inaccessible.
+Instead, a set of $M$ samples are drawn from the joint conditional density estimator the empirical marginal
+c.d.f of the $j^{\text{th}}$ price node, $\hat{F}_{\mathcal{X}^j}$, is computed as
 
 \begin{equation}
     \hat{F}_{\mathcal{X}^j}(u) = \frac{1}{M} \sum_{i=1}^M \mathbbm{1}_{\left[ x_i^j \leq u \right]}
@@ -253,11 +257,11 @@ c.d.f of the $j^{\text{th}}$ price node, $\hat{F}_{\mathcal{X}^j}$, as
 From which we estimate the CRPS on the $j^{\text{th}}$ price node, $\widehat{\text{CRPS}}_{\hat{F}_\mathcal{X}^j}$, by
 the substitution of~\eqref{eq:emp_cdf} into~\eqref{eq:crps_int}\footnotemark.
 
-\footnotetext{Note that this form of the CRPS estimator is a biased estimator. For a description of an un-biased
-counterpart and comparisons between various estimators refer to~\cite{crps_unbiased}.
-For the remainder of this paper we continue to reference the estimator characterized by the substitution of
-~\eqref{eq:emp_cdf} into~\eqref{eq:crps_int} as we believe the relevant behavior of the estimator is clearest in this
-form.}
+\footnotetext{Note that the forms of the CRPS metric presented here are biased estimators.
+For a description of an unbiased counterpart and comparisons between various estimators refer to~\cite{crps_unbiased}.
+In our computations we used an unbiased counterpart to~\eqref{eq:crps_num}, however, for the remainder of this paper we
+continue to reference the estimator characterized by the substitution of ~\eqref{eq:emp_cdf} into~\eqref{eq:crps_int}
+as we believe the relevant behavior is clearest in this form.}
 
 As this CRPS metric is only defined for univariate distributions, univariate forecasts for each price node are obtained
 by marginalizing samples drawn from the entire joint distribution.
@@ -278,7 +282,7 @@ We would often experience a small set, or even a single validation example, that
 values causing the mean calculations to be biased by the outliers leading to unstable results making fair model comparisons
 difficult.
 Tracking median NLL values was found to be better for model comparisons as the metric is robust to outlier examples.
-The inclusion of the $99\%$-ile NLL proves useful as a large $99\%$-ile error imply
+The inclusion of the $99\%$-ile NLL proves useful as a large $99\%$-ile error implies
 the model is poorly fit beyond a handful of outlier observations.
 While certain regularization techniques we found to help reduce this behavior, we still consider it an open problem for
 future research to analyze model sensitivity and determine methods to improve robustness against these outlier evaluations.
