@@ -88,7 +88,7 @@ market data:
     using the new observations.
     Let $T \in \mathbb{N}^+$ be a hyperparameter representing the number of
     market-days between recalibrations.
-    The model will produce a set of forecast for a single $T$-day interval
+    The model will produce a set of forecasts for a single $T$-day interval
     using fixed parameters, after which, the observations in the $T$-day
     interval are added to the training set and the model is re-trained from
     scratch on the extended history.
@@ -182,7 +182,7 @@ loss with results shown in Table~\ref{tab:ganloss}.
     \label{tab:ganloss}
 \end{table}
 The inclusion of adversarial loss improves the mCRPS metric.
-To investigate why, first recall the definition of the CRPS estimator~\ref{eq:crps_int} and note the sensitivity of the
+To investigate why, first recall the definition of the CRPS estimator~\eqref{eq:crps_int} and note the sensitivity of the
 CRPS estimator to outliers samples.
 Consider the empirical c.d.f for an arbitrary distribution represented by a set of finite samples, if some samples
 are extreme outliers then they will carry a non-trivial mass under the tail of the distribution.
@@ -415,8 +415,8 @@ function as shown in Figure~\ref{fig:univar_dens}.
         Forecasts from the proposed probabilistic forecasting methodology, EPF-LEAR, EPF-DNN, and OPF baselines
         against the true NEW JERSEY HUB DA LMPs over two five-day intervals in 2021.
         \textbf{Left:} forecasted and observed LMPs over a five-day interval during an extreme winter weather event in Texas which
-        caused unprecedented price action in PJM (2/12/21 - 2/17/21).
-        \textbf{Right:} forecasted and observed LMPs over a five-day interval in the summer (8/13/21 - 8/18/21).
+        caused unprecedented price action in PJM (2/12/21-2/17/21).
+        \textbf{Right:} forecasted and observed LMPs over a five-day interval in the summer (8/13/21-8/18/21).
     }
     \begin{center}
         \setlength{\fboxsep}{0pt}%
